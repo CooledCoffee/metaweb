@@ -1,3 +1,4 @@
+# common
 .*
 *~
 *.swp
@@ -18,8 +19,6 @@ develop-eggs
 lib
 lib64
 __pycache__
-
-# Installer logs
 pip-log.txt
 
 src/MANIFEST
