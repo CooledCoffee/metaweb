@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from metaweb import views, resps
+from metaweb import views
 from metaweb.resps import Response, RedirectResponse
 from metaweb.views import View
 from testutil import TestCase
@@ -70,7 +70,7 @@ class HandleTest(TestCase):
         # test
         resp = v.handle({'key': '111'})
         self.assertEqual(200, resp.code)
-        self.assertIn('NotImplementedError', resp.body)
+        self.assertIn('NOT_IMPLEMENTED_ERROR', resp.body)
         
 class AddDefaultViewTest(TestCase):
     def test(self):

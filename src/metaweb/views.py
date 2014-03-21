@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
+from StringIO import StringIO
 from decorated import Function
-from metaweb import resps
 from metaweb.files import FileField
 from metaweb.resps import Response, RedirectResponse
 import doctest
@@ -52,7 +52,8 @@ class View(Function):
         self._mimetype = mimetype
         
     def _translate_error(self, err):
-        return '%s: %s' % (type(err).__name__, str(err))
+        code = _translate_error_code(err)
+        return '%s: %s' % (code, str(err))
         
     def _translate_result(self, result):
         if isinstance(result, Response):
@@ -91,7 +92,8 @@ class Api(View):
         super(Api, self)._init(mimetype='application/json')
         
     def _translate_error(self, err):
-        return json.dumps({'error': type(err).__name__, 'message': str(err)})
+        code = _translate_error_code(err)
+        return json.dumps({'error': code, 'message': str(err)})
     
     def _translate_result(self, result):
         if isinstance(result, Response):
@@ -126,6 +128,25 @@ def _calc_path(mod_name, func_name):
             dir_name = dir_name[:-len('/root')]
         return dir_name + '/' + func_name
     return None
+
+def _translate_error_code(e):
+    '''
+    >>> _translate_error_code(AttributeError())
+    'ATTRIBUTE_ERROR'
+    >>> _translate_error_code(EOFError())
+    'EOF_ERROR'
+    >>> class MyEOFError(EOFError): pass
+    >>> _translate_error_code(MyEOFError())
+    'MY_EOF_ERROR'
+    '''
+    name = type(e).__name__
+    result = StringIO()
+    for i in range(len(name)):
+        c = name[i]
+        if c.isupper() and (name[i - 1].islower() or name[i + 1].islower()):
+            result.write('_')
+        result.write(c.upper())
+    return result.getvalue().lstrip('_')
 
 if __name__ == '__main__':
     doctest.testmod()
