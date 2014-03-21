@@ -15,11 +15,15 @@ setup(
         'Topic :: Software Development :: Libraries',
     ],
     description='A web framework based on other web frameworks.',
+    extras_require={
+        'test': ['fixtures'],
+    },
     install_requires=[
         'decorated',
     ],
     packages=[
         'metaweb',
+        'metaweb.impls'
     ],
     url='https://github.com/CooledCoffee/metaweb/',
 )

@@ -1,0 +1,34 @@
+# -*- coding: utf-8 -*-
+from decorated.util import modutil
+from metaweb import coor
+
+if modutil.module_exists('webapp2'):
+    from webapp2 import RequestHandler, WSGIApplication
+    
+    class GaeCoor(coor.coor_maker(RequestHandler)):
+        def get(self, path):
+            resp = self.handle(path)
+            self._process_resp(resp)
+            
+        def post(self, path):
+            resp = self.handle(path)
+            self._process_resp(resp)
+            
+        def _process_resp(self, resp):
+            self.response.set_status(resp.code)
+            for k, v in resp.headers.items():
+                self.response.headers[k] = v
+            self.response.out.write(resp.body)
+            
+        def _read_fields(self):
+            fields = dict(self.request.GET)
+            fields.update(self.request.POST)
+            return fields
+        
+        def _read_headers(self):
+            return self.request.headers
+        
+    def start():
+        modutil.load_tree('views')
+        return WSGIApplication([('(.*)', GaeCoor)], debug=False)
+    
