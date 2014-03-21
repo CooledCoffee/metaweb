@@ -23,7 +23,7 @@ class View(Function):
             return resp
         except Exception as e:
             log.warning('Failed to handle.', exc_info=True)
-            return Response(resps.STATUS_200, self._translate_error(e))
+            return Response(200, self._translate_error(e))
         
     def _decode_field(self, value):
         return value.decode('utf-8')
@@ -38,7 +38,7 @@ class View(Function):
                 fields[k] = self._decode_field(v)
             return self._resolve_args(**fields)
         except Exception as e:
-            raise Response(resps.STATUS_400, self._translate_error(e))
+            raise Response(400, self._translate_error(e))
     
     def _decorate(self, func):
         super(View, self)._decorate(func)
@@ -62,7 +62,7 @@ class View(Function):
             headers = {}
             if self._mimetype:
                 headers['Content-Type'] = self._mimetype + '; charset=utf-8'
-            return Response(resps.STATUS_200, result, headers)
+            return Response(200, result, headers)
         
 class Page(View):
     def _create_default_handler(self):

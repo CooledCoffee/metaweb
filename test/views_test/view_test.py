@@ -43,13 +43,13 @@ class DecodeFieldsTest(TestCase):
         with self.assertRaises(Response) as e:
             foo._decode_fields({})
         resp = e.exception
-        self.assertEqual(resps.STATUS_400, resp.code)
+        self.assertEqual(400, resp.code)
         self.assertIn('Missing', resp.body)
         
 class HandleTest(TestCase):
     def test_success(self):
         resp = foo.handle({'a': '1', 'b': '3'})
-        self.assertEquals(resps.STATUS_200, resp.code)
+        self.assertEquals(200, resp.code)
         self.assertEquals('4', resp.body)
         
     def test_response(self):
@@ -69,7 +69,7 @@ class HandleTest(TestCase):
         
         # test
         resp = v.handle({'key': '111'})
-        self.assertEqual(resps.STATUS_200, resp.code)
+        self.assertEqual(200, resp.code)
         self.assertIn('NotImplementedError', resp.body)
         
 class AddDefaultViewTest(TestCase):

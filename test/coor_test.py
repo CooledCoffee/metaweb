@@ -23,12 +23,11 @@ class LoadViewTest(TestCase):
         views._views['/users/'] = object()
             
         # test
-        try:
+        with self.assertRaises(Response) as ctx:
             coor._load_view('/users')
-            self.fail()
-        except Response, r:
-            self.assertEquals('301 Moved Permanently', r.code)
-            self.assertEquals('/users/', r.headers['Location'])
+        resp = ctx.exception
+        self.assertEquals(301, resp.code)
+        self.assertEquals('/users/', resp.headers['Location'])
         
     def test_not_found(self):
         with self.assertRaises(NotFoundResponse):
