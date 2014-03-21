@@ -11,11 +11,6 @@ def coor_maker(base_class=object):
     class _Coor(base_class):
         context_class = Context
         
-        def __init__(self, default_url=None):
-            super(_Coor, self).__init__()
-            if default_url is not None:
-                views.add_default_view(default_url)
-        
         @log_enter('Handling url {path} ...')
         @log_error('Failed to handle url {path}.', exc_info=True)
         def handle(self, path):

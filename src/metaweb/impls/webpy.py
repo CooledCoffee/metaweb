@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from cgi import FieldStorage
 from decorated.util import modutil
-from metaweb import files, coor
+from metaweb import files, coor, views
 from metaweb.files import FileField
 
 if modutil.module_exists('web'):
@@ -59,8 +59,10 @@ if modutil.module_exists('web'):
                 else:
                     break
                 
-    def start(cls=WebPyCoor):
+    def start(cls=WebPyCoor, default_url=None):
         modutil.load_tree('views')
+        if default_url is not None:
+            views.add_default_view(default_url)
         mapping = ('(.+)', cls)
         app = web.application(mapping)
         app.run()

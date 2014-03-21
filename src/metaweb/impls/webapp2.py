@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from decorated.util import modutil
-from metaweb import coor
+from metaweb import coor, views
 
 if modutil.module_exists('webapp2'):
     from webapp2 import RequestHandler, WSGIApplication
@@ -28,7 +28,9 @@ if modutil.module_exists('webapp2'):
         def _read_headers(self):
             return self.request.headers
         
-    def start():
+    def start(default_url=None):
         modutil.load_tree('views')
+        if default_url is not None:
+            views.add_default_view(default_url)
         return WSGIApplication([('(.*)', GaeCoor)], debug=False)
     
