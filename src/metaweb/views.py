@@ -1,6 +1,8 @@
 # -*- coding: UTF-8 -*-
 from StringIO import StringIO
+from datetime import date, datetime, time
 from decorated import Function
+from json.encoder import JSONEncoder
 from metaweb.files import FileField
 from metaweb.resps import Response, RedirectResponse
 import doctest
@@ -99,8 +101,21 @@ class Api(View):
         if isinstance(result, Response):
             return result
         else:
-            result = json.dumps(result)
+            result = json.dumps(result, cls=JsonEncoder)
             return super(Api, self)._translate_result(result)
+    
+class JsonEncoder(JSONEncoder):
+    def default(self, obj):
+        if hasattr(obj, '__json__'):
+            return getattr(obj, '__json__')()
+        elif isinstance(obj, datetime):
+            return obj.strftime('%Y-%m-%d %H:%M:%S')
+        elif isinstance(obj, date):
+            return obj.strftime('%Y-%m-%d')
+        elif isinstance(obj, time):
+            return obj.strftime('%H:%M:%S')
+        else:
+            return obj
     
 def add_default_view(url):
     @View
