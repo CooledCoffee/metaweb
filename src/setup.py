@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
     name='metaweb',
-    version='1.0.1',
+    version='1.0.2',
     author='Mengchen LEE',
     author_email='CooledCoffee@gmail.com',
     classifiers = [
