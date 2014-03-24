@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from decorated.util import modutil
 from metaweb import coor, views
 
