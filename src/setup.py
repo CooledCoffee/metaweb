@@ -20,6 +20,7 @@ setup(
     },
     install_requires=[
         'decorated',
+        'loggingd',
     ],
     packages=[
         'metaweb',
