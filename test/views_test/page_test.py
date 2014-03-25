@@ -13,8 +13,8 @@ class DecorateTest(TestCase):
         Page(default=True)(foo)
         self.assertEquals(2, len(views._views))
         fields = {'key': '1', 'name': 'aaa'}
-        self.assertEqual('1|aaa', views._views['/users/foo'].handle(fields).body)
-        resp = views._views['/users/'].handle(fields)
+        self.assertEqual('1|aaa', views._views['/users/foo'].render(fields).body)
+        resp = views._views['/users/'].render(fields)
         self.assertIsInstance(resp, RedirectResponse)
         self.assertEqual('/users/foo', resp.headers['Location'])
         

@@ -1,5 +1,4 @@
 # -*- coding: UTF-8 -*-
-from StringIO import StringIO
 from datetime import date, datetime, time
 from decorated import Function
 from json.encoder import JSONEncoder
@@ -17,7 +16,7 @@ def get(path):
     return _views.get(path)
 
 class View(Function):
-    def handle(self, fields):
+    def render(self, fields):
         try:
             fields = self._decode_fields(fields)
             result = self._call(**fields)

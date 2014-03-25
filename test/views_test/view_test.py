@@ -46,9 +46,9 @@ class DecodeFieldsTest(TestCase):
         self.assertEqual(400, resp.code)
         self.assertIn('Missing', resp.body)
         
-class HandleTest(TestCase):
+class RenderTest(TestCase):
     def test_success(self):
-        resp = foo.handle({'a': '1', 'b': '3'})
+        resp = foo.render({'a': '1', 'b': '3'})
         self.assertEquals(200, resp.code)
         self.assertEquals('4', resp.body)
         
@@ -57,7 +57,7 @@ class HandleTest(TestCase):
             raise RedirectResponse('/redirect')
         foo.__module__ = 'views.user'
         foo = View(foo)
-        resp = foo.handle({})
+        resp = foo.render({})
         self.assertIsInstance(resp, RedirectResponse)
         
     def test_error(self):
@@ -68,7 +68,7 @@ class HandleTest(TestCase):
         v = View(_view)
         
         # test
-        resp = v.handle({'key': '111'})
+        resp = v.render({'key': '111'})
         self.assertEqual(200, resp.code)
         self.assertIn('NOT_IMPLEMENTED_ERROR', resp.body)
         
@@ -76,7 +76,7 @@ class AddDefaultViewTest(TestCase):
     def test(self):
         views.add_default_view('/users/home')
         view = views._views['/']
-        resp = view.handle({})
+        resp = view.render({})
         self.assertIsInstance(resp, RedirectResponse)
         self.assertEqual('/users/home', resp.headers['Location'])
         
