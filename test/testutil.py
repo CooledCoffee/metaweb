@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-from fixtures._fixtures.monkeypatch import MonkeyPatch
-from fixtures.testcase import TestWithFixtures
+from fixtures2.case import TestCase
+from fixtures2.patches import PatchesFixture
 
-class TestCase(TestWithFixtures):
+class TestCase(TestCase):
     def setUp(self):
         super(TestCase, self).setUp()
-        self.useFixture(MonkeyPatch('metaweb.views._views', {}))
+        self.patches = self.useFixture(PatchesFixture())
+        self.patches.patch('metaweb.views._views', {})

@@ -1,14 +1,9 @@
 # -*- coding: utf-8 -*-
-from fixtures._fixtures.monkeypatch import MonkeyPatch
 from metaweb import views, coor
 from metaweb.resps import Response, NotFoundResponse
 from testutil import TestCase
 
 class LoadViewTest(TestCase):
-    def setUp(self):
-        super(LoadViewTest, self).setUp()
-        self.useFixture(MonkeyPatch('metaweb.views._views', {}))
-        
     def test_found(self):
         # set up
         view = object()

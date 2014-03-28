@@ -16,7 +16,7 @@ setup(
     ],
     description='A web framework based on other web frameworks.',
     extras_require={
-        'test': ['fixtures'],
+        'test': ['fixtures2'],
     },
     install_requires=[
         'decorated',
