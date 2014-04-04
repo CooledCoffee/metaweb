@@ -28,7 +28,7 @@ class View(Function):
             return Response(200, self._translate_error(e))
         
     def _decode_field(self, value):
-        return value.decode('utf-8')
+        return value if isinstance(value, unicode) else value.decode('utf-8')
     
     def _decode_fields(self, fields):
         try:
