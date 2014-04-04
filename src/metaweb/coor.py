@@ -13,7 +13,7 @@ def coor_maker(base_class=object):
         
         @log_enter('Handling url {path} ...')
         @log_error('Failed to handle url {path}.', exc_info=True)
-        def handle(self, path):
+        def render(self, path):
             try:
                 view = _load_view(path)
             except Response as resp:
@@ -22,7 +22,7 @@ def coor_maker(base_class=object):
             for k, v in fields.items():
                 log.debug('Field %s=%s' % (k, v))
             with self._build_context(path, fields, headers, cookies):
-                return view.handle(fields)
+                return view.render(fields)
             
         def _build_context(self, path, fields, headers, cookies):
             ctx = self.context_class()

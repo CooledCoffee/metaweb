@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
     name='metaweb',
-    version='1.0',
+    version='1.0.4',
     author='Mengchen LEE',
     author_email='CooledCoffee@gmail.com',
     classifiers = [
@@ -16,10 +16,12 @@ setup(
     ],
     description='A web framework based on other web frameworks.',
     extras_require={
-        'test': ['fixtures'],
+        'test': ['fixtures2'],
     },
     install_requires=[
         'decorated',
+        'inflection',
+        'loggingd',
     ],
     packages=[
         'metaweb',

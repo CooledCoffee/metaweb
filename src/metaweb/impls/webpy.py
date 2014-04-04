@@ -11,11 +11,11 @@ if modutil.module_exists('web'):
     
     class WebPyCoor(coor.coor_maker()):
         def GET(self, path):
-            resp = self.handle(path)
+            resp = self.render(path)
             return self._process_resp(resp)
     
         def POST(self, path):
-            resp = self.handle(path)
+            resp = self.render(path)
             return self._process_resp(resp)
         
         def _read_fields(self):

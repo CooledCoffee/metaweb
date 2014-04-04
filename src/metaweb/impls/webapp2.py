@@ -8,11 +8,11 @@ if modutil.module_exists('webapp2'):
     
     class GaeCoor(coor.coor_maker(RequestHandler)):
         def get(self, path):
-            resp = self.handle(path)
+            resp = self.render(path)
             self._process_resp(resp)
             
         def post(self, path):
-            resp = self.handle(path)
+            resp = self.render(path)
             self._process_resp(resp)
             
         def _process_resp(self, resp):

@@ -1,11 +1,11 @@
 # -*- coding: UTF-8 -*-
-from StringIO import StringIO
 from datetime import date, datetime, time
 from decorated import Function
 from json.encoder import JSONEncoder
 from metaweb.files import FileField
 from metaweb.resps import Response, RedirectResponse
 import doctest
+import inflection
 import json
 import loggingd
 
@@ -16,7 +16,7 @@ def get(path):
     return _views.get(path)
 
 class View(Function):
-    def handle(self, fields):
+    def render(self, fields):
         try:
             fields = self._decode_fields(fields)
             result = self._call(**fields)
@@ -154,14 +154,9 @@ def _translate_error_code(e):
     >>> _translate_error_code(MyEOFError())
     'MY_EOF_ERROR'
     '''
-    name = type(e).__name__
-    result = StringIO()
-    for i in range(len(name)):
-        c = name[i]
-        if c.isupper() and (name[i - 1].islower() or name[i + 1].islower()):
-            result.write('_')
-        result.write(c.upper())
-    return result.getvalue().lstrip('_')
+    code = type(e).__name__
+    code = inflection.underscore(code)
+    return code.upper()
 
 if __name__ == '__main__':
     doctest.testmod()
