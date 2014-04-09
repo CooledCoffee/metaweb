@@ -134,15 +134,18 @@ def _calc_path(mod_name, func_name):
     '/get'
     >>> _calc_path('views', 'get')
     '/get'
+    >>> _calc_path('views.users', 'root')
+    '/users'
+    >>> _calc_path('views', 'root')
+    '/'
     '''
-    if mod_name == 'views':
-        return '/' + func_name
-    if mod_name.startswith('views.'):
-        dir_name = '/' + mod_name[len('views.'):].replace('.', '/')
-        if dir_name.endswith('/root'):
-            dir_name = dir_name[:-len('/root')]
-        return dir_name + '/' + func_name
-    return None
+    comps = mod_name.split('.')
+    if comps[0] != 'views':
+        return None
+    comps = comps[1:]
+    comps.append(func_name)
+    comps = [c for c in comps if c != 'root']
+    return '/' + '/'.join(comps)
 
 def _translate_error_code(e):
     '''

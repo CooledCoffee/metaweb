@@ -91,11 +91,13 @@ It gets difficult to maintain when you are building large sites with tons of url
 
 In contrast, metaweb takes the old php/.net approach.
 It automatically infers the corresponding url of a view based on its position.
-For example, both of these functions map to the /math/add url:
+For example, all of these functions map to the /math/add url:
 
 * An add function in the views.math module
 
 * An add function in the views.math.root module
+
+* A root function in the views.math.add module
 
 All views must sit within the views package/module, otherwise they are simply ignored.
 You cannot use regular expressions here. Flexibility is sacrificed in exchange of convenience here.
