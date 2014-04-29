@@ -4,6 +4,11 @@ Introduction
 MetaWeb is a web framework built on other web frameworks.
 Currently it supports web.py and webapp2 (thus also Google App Engine).
 
+Installation
+============
+
+pip install metaweb
+
 Hello World
 ===========
 
