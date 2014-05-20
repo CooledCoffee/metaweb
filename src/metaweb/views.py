@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 from datetime import date, datetime, time
 from decorated import Function
+from decorated.util import modutil
 from json.encoder import JSONEncoder
 from metaweb.files import FileField
 from metaweb.resps import Response, RedirectResponse
@@ -10,12 +11,14 @@ import json
 import loggingd
 
 log = loggingd.getLogger(__name__)
+_pending_views = []
 _views = {}
 
-def get(path):
-    return _views.get(path)
-
 class View(Function):
+    def bind(self, path):
+        self.path = path
+        _views[path] = self
+    
     def render(self, fields):
         try:
             fields = self._decode_fields(fields)
@@ -44,9 +47,7 @@ class View(Function):
     
     def _decorate(self, func):
         super(View, self)._decorate(func)
-        self.path = _calc_path(func.__module__, func.__name__)
-        if self.path:
-            _views[self.path] = self
+        _pending_views.append(self)
         return self
     
     def _init(self, mimetype=None):
@@ -68,18 +69,13 @@ class View(Function):
             return Response(200, result, headers)
         
 class Page(View):
-    def _create_default_handler(self):
+    def bind(self, path):
+        super(Page, self).bind(path)
         @View
         def _default():
-            raise RedirectResponse(self.path)
-        default_path = self.path[:self.path.rfind('/') + 1]
-        _views[default_path] = _default
-            
-    def _decorate(self, func):
-        super(Page, self)._decorate(func)
-        if self.path and self._default:
-            self._create_default_handler()
-        return self
+            raise RedirectResponse(path)
+        default_path = path[:path.rfind('/') + 1]
+        _default.bind(default_path)
     
     def _init(self, default=False):
         super(Page, self)._init(mimetype='text/html')
@@ -124,28 +120,46 @@ def add_default_view(url):
     _default.path = '/'
     _views['/'] = _default
     
-def _calc_path(mod_name, func_name):
+def get(path):
+    return _views.get(path)
+
+def load(roots=('views',)):
+    for root in roots:
+        modutil.load_tree(root)
+    for v in _pending_views:
+        path = _obj_to_path(v)
+        for root in roots:
+            if path.startswith(root + '.'):
+                path = _calc_path(path, root)
+                v.bind(path)
+        
+def _calc_path(path, root):
     '''
-    >>> _calc_path('views.users', 'get')
+    >>> _calc_path('views.users.get', 'views')
     '/users/get'
-    >>> _calc_path('views.users.root', 'get')
+    >>> _calc_path('views.users.root.get', 'views')
     '/users/get'
-    >>> _calc_path('views.root', 'get')
+    >>> _calc_path('views.root.get', 'views')
     '/get'
-    >>> _calc_path('views', 'get')
+    >>> _calc_path('views.get', 'views')
     '/get'
-    >>> _calc_path('views.users', 'root')
+    >>> _calc_path('views.users.root', 'views')
     '/users'
-    >>> _calc_path('views', 'root')
+    >>> _calc_path('views.root', 'views')
     '/'
     '''
-    comps = mod_name.split('.')
-    if comps[0] != 'views':
-        return None
-    comps = comps[1:]
-    comps.append(func_name)
-    comps = [c for c in comps if c != 'root']
-    return '/' + '/'.join(comps)
+    path = path[len(root) + 1:]
+    ss = path.split('.')
+    ss = [s for s in ss if s != 'root']
+    return '/' + '/'.join(ss)
+
+def _obj_to_path(obj):
+    '''
+    >>> from metaweb.views import View
+    >>> _obj_to_path(View)
+    'metaweb.views.View'
+    '''
+    return obj.__module__ + '.' + obj.__name__
 
 def _translate_error_code(e):
     '''

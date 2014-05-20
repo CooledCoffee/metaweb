@@ -6,25 +6,17 @@ from testutil import TestCase
 
 def foo(a, b='2'):
     return int(a) + int(b)
-foo.__module__ = 'views.users'
 foo = View(foo)
 
 class DecorateTest(TestCase):
-    def test_success(self):
-        def foo(a, b=2):
-            pass
-        foo.__module__ = 'views.users'
-        View(foo)
-        self.assertEquals(1, len(views._views))
-        h = views._views['/users/foo']
-        self.assertEquals(('a',), h.required_params)
-        self.assertEquals((('b', 2),), h.optional_params)
+    def test(self):
+        # set up
+        self.patches.patch('metaweb.views._pending_views', [])
         
-    def test_invalid_module(self):
-        def foo(a, b=2):
-            pass
+        # test
         View(foo)
-        self.assertEquals(0, len(views._views))
+        self.assertEquals(1, len(views._pending_views))
+        self.assertEqual(foo, views._pending_views[0]._func)
         
 class DecodeFieldsTest(TestCase):
     def test_normal(self):
@@ -80,3 +72,15 @@ class AddDefaultViewTest(TestCase):
         self.assertIsInstance(resp, RedirectResponse)
         self.assertEqual('/users/home', resp.headers['Location'])
         
+class LoadTest(TestCase):
+    def test(self):
+        # set up
+        self.patches.patch('metaweb.views._pending_views', [])
+        self.patches.patch('metaweb.views._views', {})
+        
+        # test
+        View(foo)
+        views.load(roots=['views_test.view_test'])
+        self.assertEquals(1, len(views._views))
+        self.assertEqual(foo, views._views['/foo']._func)
+    

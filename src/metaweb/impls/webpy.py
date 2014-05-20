@@ -59,8 +59,8 @@ if modutil.module_exists('web'):
                 else:
                     break
                 
-    def start(cls=WebPyCoor, default_url=None):
-        modutil.load_tree('views')
+    def start(cls=WebPyCoor, default_url=None, roots=('views',)):
+        views.load(roots=roots)
         if default_url is not None:
             views.add_default_view(default_url)
         mapping = ('(.+)', cls)

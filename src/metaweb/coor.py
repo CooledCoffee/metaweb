@@ -15,7 +15,7 @@ def coor_maker(base_class=object):
         @log_error('Failed to handle url {path}.', exc_info=True)
         def render(self, path):
             try:
-                view = _load_view(path)
+                view = _get_view(path)
             except Response as resp:
                 return resp
             fields, headers, cookies = self._parse_request()
@@ -48,7 +48,7 @@ def coor_maker(base_class=object):
     return _Coor
 
 @log_error('Handler for {path} cannot be found.')
-def _load_view(path):
+def _get_view(path):
     view = views.get(path)
     if view:
         return view
