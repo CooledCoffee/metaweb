@@ -8,7 +8,7 @@ def foo(a, b='0'):
     return str(int(a) + int(b))
 
 class DecorateTest(TestCase):
-    def test_default_root(self):
+    def test_default(self):
         # set up
         self.patches.patch('metaweb.views._pending_views', [])
         self.patches.patch('metaweb.views._views', {})
