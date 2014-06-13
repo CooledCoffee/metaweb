@@ -73,7 +73,7 @@ class Page(View):
         super(Page, self).bind(path)
         @View
         def _default():
-            raise RedirectResponse(path)
+            raise RedirectResponse(path.split('/')[-1])
         default_path = path[:path.rfind('/') + 1]
         _default.bind(default_path)
     

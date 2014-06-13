@@ -4,11 +4,11 @@ from metaweb.resps import RedirectResponse
 from metaweb.views import Page
 from testutil import TestCase
 
-def foo(key, name='default name'):
-    return str(key) + '|' + name
+def foo(a, b='0'):
+    return str(int(a) + int(b))
 
 class DecorateTest(TestCase):
-    def test_default(self):
+    def test_default_root(self):
         # set up
         self.patches.patch('metaweb.views._pending_views', [])
         self.patches.patch('metaweb.views._views', {})
@@ -19,9 +19,9 @@ class DecorateTest(TestCase):
         
         # verify
         self.assertEquals(2, len(views._views))
-        fields = {'key': '1', 'name': 'aaa'}
-        self.assertEqual('1|aaa', views._views['/foo'].render(fields).body)
+        fields = {'a': '1', 'b': '2'}
+        self.assertEqual('3', views._views['/foo'].render(fields).body)
         resp = views._views['/'].render(fields)
         self.assertIsInstance(resp, RedirectResponse)
-        self.assertEqual('/foo', resp.headers['Location'])
+        self.assertEqual('foo', resp.headers['Location'])
         
