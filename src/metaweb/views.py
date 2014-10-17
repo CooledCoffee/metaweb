@@ -144,14 +144,16 @@ def _calc_path(path, root):
     >>> _calc_path('views.get', 'views')
     '/get'
     >>> _calc_path('views.users.root', 'views')
-    '/users'
+    '/users/'
     >>> _calc_path('views.root', 'views')
     '/'
     '''
     path = path[len(root) + 1:]
     ss = path.split('.')
-    ss = [s for s in ss if s != 'root']
-    return '/' + '/'.join(ss)
+    path = '/' + '/'.join([s for s in ss if s != 'root'])
+    if ss[-1] == 'root':
+        path += '/'
+    return path.replace('//', '/')
 
 def _obj_to_path(obj):
     '''
