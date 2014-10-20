@@ -15,6 +15,8 @@ _pending_views = []
 _views = {}
 
 class View(Function):
+    mime = None
+    
     def bind(self, path):
         self.path = path
         _views[path] = self
@@ -49,10 +51,6 @@ class View(Function):
         super(View, self)._decorate(func)
         _pending_views.append(self)
         return self
-    
-    def _init(self, mimetype=None):
-        super(View, self)._init()
-        self._mimetype = mimetype
         
     def _translate_error(self, err):
         code = _translate_error_code(err)
@@ -64,22 +62,20 @@ class View(Function):
         else:
             result = unicode(result)
             headers = {}
-            if self._mimetype:
-                headers['Content-Type'] = self._mimetype + '; charset=utf-8'
+            if self.mime:
+                headers['Content-Type'] = self.mime + '; charset=utf-8'
             return Response(200, result, headers)
         
 class Page(View):
-    def _init(self):
-        super(Page, self)._init(mimetype='text/html')
+    mime = 'text/html'
         
 class Api(View):
+    mime = 'application/json'
+    
     def _decode_field(self, value):
         value = super(Api, self)._decode_field(value)
         return json.loads(value)
             
-    def _init(self):
-        super(Api, self)._init(mimetype='application/json')
-        
     def _translate_error(self, err):
         code = _translate_error_code(err)
         return json.dumps({'error': code, 'message': str(err)})
