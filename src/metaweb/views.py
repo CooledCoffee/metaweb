@@ -69,17 +69,8 @@ class View(Function):
             return Response(200, result, headers)
         
 class Page(View):
-    def bind(self, path):
-        super(Page, self).bind(path)
-        @View
-        def _default():
-            raise RedirectResponse(self.__name__)
-        default_path = path[:path.rfind('/') + 1]
-        _default.bind(default_path)
-    
-    def _init(self, default=False):
+    def _init(self):
         super(Page, self)._init(mimetype='text/html')
-        self._default = default
         
 class Api(View):
     def _decode_field(self, value):
