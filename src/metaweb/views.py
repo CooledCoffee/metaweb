@@ -51,6 +51,10 @@ class View(Function):
         super(View, self)._decorate(func)
         _pending_views.append(self)
         return self
+    
+    def _init(self, path=None):
+        super(View, self)._init()
+        self.path = path
         
     def _translate_error(self, err):
         code = _translate_error_code(err)
@@ -114,33 +118,27 @@ def load(roots=('views',)):
     for root in roots:
         modutil.load_tree(root)
     for v in _pending_views:
-        path = _obj_to_path(v)
-        for root in roots:
-            if path.startswith(root + '.'):
-                path = _calc_path(path, root)
-                v.bind(path)
+        path = v.path
+        if path is None:
+            path = _obj_to_path(v)
+            path = _calc_path(path, roots)
+        v.bind(path)
         
-def _calc_path(path, root):
+def _calc_path(path, roots):
     '''
-    >>> _calc_path('views.users.get', 'views')
+    >>> _calc_path('views.users.get', ['views'])
     '/users/get'
-    >>> _calc_path('views.users.root.get', 'views')
+    >>> _calc_path('views.get', ['views'])
+    '/get'
+    >>> _calc_path('views2.users.get', ['views', 'views2'])
     '/users/get'
-    >>> _calc_path('views.root.get', 'views')
-    '/get'
-    >>> _calc_path('views.get', 'views')
-    '/get'
-    >>> _calc_path('views.users.root', 'views')
-    '/users/'
-    >>> _calc_path('views.root', 'views')
-    '/'
+    >>> _calc_path('views2.users.get', ['views']) is None
+    True
     '''
-    path = path[len(root) + 1:]
-    ss = path.split('.')
-    path = '/' + '/'.join([s for s in ss if s != 'root'])
-    if ss[-1] == 'root':
-        path += '/'
-    return path.replace('//', '/')
+    for root in roots:
+        if path.startswith(root + '.'):
+            return path[len(root):].replace('.', '/')
+    return None
 
 def _obj_to_path(obj):
     '''
