@@ -30,7 +30,7 @@ class View(Function):
             return resp
         except Exception as e:
             log.warning('Failed to handle.', exc_info=True)
-            return Response(200, self._translate_error(e))
+            return self._translate_error(e)
         
     def _decode_field(self, value):
         return value if isinstance(value, unicode) else value.decode('utf-8')
@@ -45,7 +45,7 @@ class View(Function):
                 fields[k] = self._decode_field(v)
             return self._resolve_args(**fields)
         except Exception as e:
-            raise Response(400, self._translate_error(e))
+            raise self._translate_error(e, code=400)
     
     def _decorate(self, func):
         super(View, self)._decorate(func)
@@ -56,9 +56,9 @@ class View(Function):
         super(View, self)._init()
         self.path = path
         
-    def _translate_error(self, err):
-        code = _translate_error_code(err)
-        return '%s: %s' % (code, str(err))
+    def _translate_error(self, err, code=500):
+        error_code = _translate_error_code(err)
+        return Response(code, '%s: %s' % (error_code, str(err)))
         
     def _translate_result(self, result):
         if isinstance(result, Response):
