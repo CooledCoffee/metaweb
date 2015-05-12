@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from distutils.core import setup
+import setuptools
 
 setup(
     name='metaweb',
@@ -23,9 +24,7 @@ setup(
         'inflection',
         'loggingd',
     ],
-    packages=[
-        'metaweb',
-        'metaweb.impls'
-    ],
+    package_dir={'': 'src'},
+    packages=setuptools.find_packages(where='src'),
     url='https://github.com/CooledCoffee/metaweb/',
 )
