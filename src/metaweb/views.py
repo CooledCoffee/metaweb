@@ -134,10 +134,17 @@ def _calc_path(path, roots):
     '/users/get'
     >>> _calc_path('views2.users.get', ['views']) is None
     True
+    >>> _calc_path('views.users.get', {'views': ''})
+    '/users/get'
+    >>> _calc_path('admin.users.get', {'admin': '/admin'})
+    '/admin/users/get'
     '''
-    for root in roots:
-        if path.startswith(root + '.'):
-            return path[len(root):].replace('.', '/')
+    if isinstance(roots, (list, tuple)):
+        roots = {r: '' for r in roots}
+    for package, prefix in roots.items():
+        if path.startswith(package + '.'):
+            path = path[len(package):].replace('.', '/')
+            return prefix + path
     return None
 
 def _obj_to_path(obj):
