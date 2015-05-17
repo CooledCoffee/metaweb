@@ -7,7 +7,7 @@ class GetViewTest(TestCase):
     def test_found(self):
         # set up
         view = object()
-        views._views['/users/create'] = view
+        self.patches.patch('metaweb.views._abs_pathes', {'/users/create': view})
         
         # test
         result = coor._get_view('/users/create')
@@ -15,7 +15,7 @@ class GetViewTest(TestCase):
         
     def test_found_with_slash(self):
         # set up
-        views._views['/users/'] = object()
+        self.patches.patch('metaweb.views._abs_pathes', {'/users/': object()})
             
         # test
         with self.assertRaises(Response) as ctx:

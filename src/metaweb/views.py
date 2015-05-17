@@ -12,14 +12,15 @@ import loggingd
 
 log = loggingd.getLogger(__name__)
 _pending_views = []
-_views = {}
+_abs_pathes = {}
+_regex_pathes = {}
 
 class View(Function):
     mime = None
     
     def bind(self, path):
         self.path = path
-        _views[path] = self
+        _abs_pathes[path] = self
     
     def render(self, fields):
         try:
@@ -54,7 +55,7 @@ class View(Function):
     
     def _init(self, path=None):
         super(View, self)._init()
-        self.path = path
+        self._specified_path = path
         
     def _translate_error(self, err, code=500):
         error_code = _translate_error_code(err)
@@ -109,42 +110,40 @@ def add_default_view(url):
     def _default():
         raise RedirectResponse(url)
     _default.path = '/'
-    _views['/'] = _default
+    _abs_pathes['/'] = _default
     
 def get(path):
-    return _views.get(path)
+    return _abs_pathes.get(path)
 
 def load(roots=('views',)):
+    if isinstance(roots, (list, tuple)):
+        roots = {r: '' for r in roots}
     for root in roots:
         modutil.load_tree(root)
     for v in _pending_views:
-        path = v.path
-        if path is None:
-            path = _obj_to_path(v)
-            path = _calc_path(path, roots)
-        v.bind(path)
+        obj_path = _obj_to_path(v)
+        path = _calc_path(roots, obj_path, v._specified_path)
+        if path is not None:
+            v.bind(path)
         
-def _calc_path(path, roots):
+def _calc_path(roots, obj_path, specified_path):
     '''
-    >>> _calc_path('views.users.get', ['views'])
+    >>> _calc_path({'views': ''}, 'views.users.get', None)
     '/users/get'
-    >>> _calc_path('views.get', ['views'])
+    >>> _calc_path({'views': ''}, 'views.get', None)
     '/get'
-    >>> _calc_path('views2.users.get', ['views', 'views2'])
+    >>> _calc_path({'views': '', 'views2': ''}, 'views2.users.get', None)
     '/users/get'
-    >>> _calc_path('views2.users.get', ['views']) is None
-    True
-    >>> _calc_path('views.users.get', {'views': ''})
-    '/users/get'
-    >>> _calc_path('admin.users.get', {'admin': '/admin'})
+    >>> _calc_path({'admin': '/admin'}, 'admin.users.get', None)
     '/admin/users/get'
+    >>> _calc_path({'views': ''}, 'views2.users.get', None) is None
+    True
     '''
-    if isinstance(roots, (list, tuple)):
-        roots = {r: '' for r in roots}
     for package, prefix in roots.items():
-        if path.startswith(package + '.'):
-            path = path[len(package):].replace('.', '/')
-            return prefix + path
+        if obj_path.startswith(package + '.'):
+            if specified_path is None:
+                specified_path = obj_path[len(package):].replace('.', '/')
+            return prefix + specified_path
     return None
 
 def _obj_to_path(obj):

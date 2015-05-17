@@ -18,6 +18,22 @@ class DecorateTest(TestCase):
         self.assertEquals(1, len(views._pending_views))
         self.assertEqual(foo, views._pending_views[0]._func)
         
+class BindTest(TestCase):
+    def test_absolute_path(self):
+        view = View()
+        view.bind('/view')
+        self.assertEqual(view, views._abs_pathes['/view'])
+        
+    def test_specified(self):
+        view = View(path='/view')
+        view.bind('/view')
+        self.assertEqual(view, views._abs_pathes['/view'])
+        
+    def test_bind_to_different_path(self):
+        view = View(path='/view')
+        view.bind('/prefix/view')
+        self.assertEqual(view, views._abs_pathes['/prefix/view'])
+        
 class DecodeFieldsTest(TestCase):
     def test_normal(self):
         fields = foo._decode_fields({'a': '1', 'b': '2'})
@@ -67,20 +83,26 @@ class RenderTest(TestCase):
 class AddDefaultViewTest(TestCase):
     def test(self):
         views.add_default_view('/users/home')
-        view = views._views['/']
+        view = views._abs_pathes['/']
         resp = view.render({})
         self.assertIsInstance(resp, RedirectResponse)
         self.assertEqual('/users/home', resp.headers['Location'])
         
 class LoadTest(TestCase):
-    def test(self):
-        # set up
-        self.patches.patch('metaweb.views._pending_views', [])
-        self.patches.patch('metaweb.views._views', {})
-        
-        # test
-        View(foo)
+    def test_basic(self):
+        view = View(foo)
         views.load(roots=['views_test.view_test'])
-        self.assertEquals(1, len(views._views))
-        self.assertEqual(foo, views._views['/foo']._func)
+        self.assertEquals(1, len(views._abs_pathes))
+        self.assertEqual(view, views._abs_pathes['/foo'])
     
+    def test_prefix(self):
+        view = View(foo)
+        views.load(roots={'views_test.view_test': '/prefix'})
+        self.assertEquals(1, len(views._abs_pathes))
+        self.assertEqual(view, views._abs_pathes['/prefix/foo'])
+        
+    def test_out_of_roots(self):
+        View(foo)
+        views.load(roots=['metaweb.views'])
+        self.assertEquals(0, len(views._abs_pathes))
+        
