@@ -9,7 +9,9 @@ import doctest
 import inflection
 import json
 import loggingd
+import re
 
+REGEX_PATH_PARAM = re.compile('<(.*?)>')
 log = loggingd.getLogger(__name__)
 _pending_views = []
 _abs_pathes = {}
@@ -20,12 +22,23 @@ class View(Function):
     
     def bind(self, path):
         self.path = path
-        _abs_pathes[path] = self
+        if '<' in path and '>' in path:
+            path = REGEX_PATH_PARAM.sub(lambda m: '(?P<%s>.*?)' % m.group(1), path)
+            path = re.compile('^%s$' % path)
+            _regex_pathes[path] = self
+        else:
+            _abs_pathes[path] = self
     
-    def render(self, fields):
+    def render(self, path_args, fields):
         try:
             fields = self._decode_fields(fields)
-            result = self._call(**fields)
+            args = path_args
+            args.update(fields)
+            try:
+                args = self._resolve_args(**args)
+            except Exception as e:
+                raise self._translate_error(e, code=400)
+            result = self._call(**args)
             return self._translate_result(result)
         except Response as resp:
             return resp
@@ -37,16 +50,14 @@ class View(Function):
         return value if isinstance(value, unicode) else value.decode('utf-8')
     
     def _decode_fields(self, fields):
-        try:
-            for k, v in fields.items():
-                if k not in self.params:
-                    continue
-                if isinstance(v, FileField):
-                    continue
-                fields[k] = self._decode_field(v)
-            return self._resolve_args(**fields)
-        except Exception as e:
-            raise self._translate_error(e, code=400)
+        results = {}
+        for k, v in fields.items():
+            if k not in self.params:
+                continue
+            if isinstance(v, FileField):
+                results[k] = v
+            results[k] = self._decode_field(v)
+        return results
     
     def _decorate(self, func):
         super(View, self)._decorate(func)
@@ -109,12 +120,8 @@ def add_default_view(url):
     @View
     def _default():
         raise RedirectResponse(url)
-    _default.path = '/'
-    _abs_pathes['/'] = _default
+    _default.bind('/')
     
-def get(path):
-    return _abs_pathes.get(path)
-
 def load(roots=('views',)):
     if isinstance(roots, (list, tuple)):
         roots = {r: '' for r in roots}
@@ -126,6 +133,16 @@ def load(roots=('views',)):
         if path is not None:
             v.bind(path)
         
+def match(path):
+    view = _abs_pathes.get(path)
+    if view is not None:
+        return view, {}
+    for pattern, v in _regex_pathes.items():
+        match = pattern.match(path)
+        if match is not None:
+            return v, match.groupdict()
+    return None, None
+
 def _calc_path(roots, obj_path, specified_path):
     '''
     >>> _calc_path({'views': ''}, 'views.users.get', None)

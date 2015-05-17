@@ -1,30 +1,20 @@
 # -*- coding: utf-8 -*-
-from metaweb import views, coor
-from metaweb.resps import Response, NotFoundResponse
+from metaweb import coor
+from metaweb.resps import NotFoundResponse
 from testutil import TestCase
 
-class GetViewTest(TestCase):
+class MatchViewTest(TestCase):
     def test_found(self):
         # set up
-        view = object()
-        self.patches.patch('metaweb.views._abs_pathes', {'/users/create': view})
+        v = object()
+        self.patches.patch('metaweb.views._abs_pathes', {'/users/create': v})
         
         # test
-        result = coor._get_view('/users/create')
-        self.assertEquals(view, result)
-        
-    def test_found_with_slash(self):
-        # set up
-        self.patches.patch('metaweb.views._abs_pathes', {'/users/': object()})
-            
-        # test
-        with self.assertRaises(Response) as ctx:
-            coor._get_view('/users')
-        resp = ctx.exception
-        self.assertEquals(301, resp.code)
-        self.assertEquals('/users/', resp.headers['Location'])
+        view, args = coor._match_view('/users/create')
+        self.assertEquals(v, view)
+        self.assertEquals({}, args)
         
     def test_not_found(self):
         with self.assertRaises(NotFoundResponse):
-            coor._get_view('/users')
+            coor._match_view('/users')
             

@@ -2,7 +2,7 @@
 from decorated.base.context import Context
 from loggingd import log_enter, log_error
 from metaweb import views
-from metaweb.resps import Response, MovedResponse, NotFoundResponse
+from metaweb.resps import Response, NotFoundResponse
 import logging
 
 log = logging.getLogger(__name__)
@@ -15,16 +15,16 @@ def coor_maker(base_class=object):
         @log_error('Failed to handle url {path}.', exc_info=True)
         def render(self, path):
             try:
-                view = _get_view(path)
+                view, path_args = _match_view(path)
             except Response as resp:
                 return resp
             fields, headers, cookies = self._parse_request()
             for k, v in fields.items():
                 log.debug('Field %s=%s' % (k, v))
-            with self._build_context(path, fields, headers, cookies):
-                return view.render(fields)
+            with self._build_context(path, headers, cookies):
+                return view.render(path_args, fields)
             
-        def _build_context(self, path, fields, headers, cookies):
+        def _build_context(self, path, headers, cookies):
             ctx = self.context_class()
             ctx.path = path
             ctx.headers = headers
@@ -47,11 +47,9 @@ def coor_maker(base_class=object):
             return {}
     return _Coor
 
-@log_error('Handler for {path} cannot be found.')
-def _get_view(path):
-    view = views.get(path)
-    if view:
-        return view
-    if views.get(path + '/'):
-        raise MovedResponse(path + '/')
-    raise NotFoundResponse()
+@log_error('View for {path} cannot be found.')
+def _match_view(path):
+    view, args = views.match(path)
+    if view is None:
+        raise NotFoundResponse()
+    return view, args

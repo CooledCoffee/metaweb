@@ -3,6 +3,7 @@ from metaweb import views
 from metaweb.resps import Response, RedirectResponse
 from metaweb.views import View
 from testutil import TestCase
+import re
 
 def foo(a, b='2'):
     return int(a) + int(b)
@@ -21,18 +22,14 @@ class DecorateTest(TestCase):
 class BindTest(TestCase):
     def test_absolute_path(self):
         view = View()
-        view.bind('/view')
-        self.assertEqual(view, views._abs_pathes['/view'])
+        view.bind('/users')
+        self.assertEqual(view, views._abs_pathes['/users'])
         
-    def test_specified(self):
-        view = View(path='/view')
-        view.bind('/view')
-        self.assertEqual(view, views._abs_pathes['/view'])
-        
-    def test_bind_to_different_path(self):
-        view = View(path='/view')
-        view.bind('/prefix/view')
-        self.assertEqual(view, views._abs_pathes['/prefix/view'])
+    def test_regex_path(self):
+        view = View()
+        view.bind('/users/<id>')
+        expected_path = re.compile('^/users/(?P<id>.*?)$')
+        self.assertEqual(view, views._regex_pathes[expected_path])
         
 class DecodeFieldsTest(TestCase):
     def test_normal(self):
@@ -41,22 +38,15 @@ class DecodeFieldsTest(TestCase):
         
     def test_chinese(self):
         fields = foo._decode_fields({'a': u'中文'.encode('utf-8')})
-        self.assertEqual({'a': u'中文', 'b': '2'}, fields)
+        self.assertEqual({'a': u'中文'}, fields)
 
     def test_extra_fields(self):
         fields = foo._decode_fields({'a': '1', 'b': '2', 'timestamp': '111'})
         self.assertEqual({'a': '1', 'b': '2'}, fields)
         
-    def test_missing_field(self):
-        with self.assertRaises(Response) as e:
-            foo._decode_fields({})
-        resp = e.exception
-        self.assertEqual(400, resp.code)
-        self.assertIn('Missing', resp.body)
-        
 class RenderTest(TestCase):
-    def test_success(self):
-        resp = foo.render({'a': '1', 'b': '3'})
+    def test_basic(self):
+        resp = foo.render({}, {'a': '1', 'b': '3'})
         self.assertEquals(200, resp.code)
         self.assertEquals('4', resp.body)
         
@@ -65,8 +55,21 @@ class RenderTest(TestCase):
             raise RedirectResponse('/redirect')
         foo.__module__ = 'views.user'
         foo = View(foo)
-        resp = foo.render({})
+        resp = foo.render({}, {})
         self.assertIsInstance(resp, RedirectResponse)
+        
+    def test_path_args(self):
+        resp = foo.render({'a': '1'}, {'b': '3'})
+        self.assertEquals(200, resp.code)
+        self.assertEquals('4', resp.body)
+        
+        resp = foo.render({'a': '0'}, {'a': '1', 'b': '3'})
+        self.assertEquals(200, resp.code)
+        self.assertEquals('4', resp.body)
+        
+    def test_missing_field(self):
+        resp = foo.render({}, {})
+        self.assertEqual(400, resp.code)
         
     def test_error(self):
         # set up
@@ -76,7 +79,7 @@ class RenderTest(TestCase):
         v = View(_view)
         
         # test
-        resp = v.render({'key': '111'})
+        resp = v.render({}, {'key': '111'})
         self.assertEqual(500, resp.code)
         self.assertIn('NOT_IMPLEMENTED_ERROR', resp.body)
         
@@ -84,7 +87,7 @@ class AddDefaultViewTest(TestCase):
     def test(self):
         views.add_default_view('/users/home')
         view = views._abs_pathes['/']
-        resp = view.render({})
+        resp = view.render({}, {})
         self.assertIsInstance(resp, RedirectResponse)
         self.assertEqual('/users/home', resp.headers['Location'])
         
@@ -105,4 +108,31 @@ class LoadTest(TestCase):
         View(foo)
         views.load(roots=['metaweb.views'])
         self.assertEquals(0, len(views._abs_pathes))
+        
+class MatchTest(TestCase):
+    def test_absolute_path(self):
+        # set up
+        v = object()
+        self.patches.patch('metaweb.views._abs_pathes', {'/users/': v})
+        
+        # test
+        view, args = views.match('/users/')
+        self.assertEquals(v, view)
+        self.assertEqual({}, args)
+        
+    def test_regex_path(self):
+        # set up
+        v = object()
+        self.patches.patch('metaweb.views._regex_pathes', {re.compile('^/users/(?P<id>.*?)$'): v})
+        
+        # test
+        view, args = views.match('/users/111')
+        self.assertEquals(v, view)
+        self.assertEqual(1, len(args))
+        self.assertEqual('111', args['id'])
+        
+    def test_not_found(self):
+        view, args = views.match('/users/create')
+        self.assertIsNone(view)
+        self.assertIsNone(args)
         
