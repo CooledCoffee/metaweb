@@ -59,11 +59,18 @@ if modutil.module_exists('web'):
                 else:
                     break
                 
-    def start(cls=WebPyCoor, default_url=None, roots=('views',)):
+    def run(cls=WebPyCoor, default_url=None, roots=('views',)):
+        app = _create_app(cls, default_url, roots)
+        app.run()
+        
+    def wsgi(cls=WebPyCoor, default_url=None, roots=('views',)):
+        app = _create_app(cls, default_url, roots)
+        return app.wsgifunc()
+        
+    def _create_app(cls, default_url, roots):
         views.load(roots=roots)
         if default_url is not None:
             views.add_default_view(default_url)
         mapping = ('(.+)', cls)
-        app = web.application(mapping)
-        app.run()
+        return web.application(mapping)
         

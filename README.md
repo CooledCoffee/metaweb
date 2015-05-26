@@ -32,7 +32,7 @@ We create a server module like this:
 
 	from metaweb.impls import webpy
 	
-	webpy.start()
+	webpy.run()
 
 Start the server by running
 

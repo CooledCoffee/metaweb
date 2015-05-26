@@ -29,7 +29,7 @@ if modutil.module_exists('webapp2'):
         def _read_headers(self):
             return self.request.headers
         
-    def start(default_url=None, roots=('views',)):
+    def wsgi(default_url=None, roots=('views',)):
         views.load(roots=roots)
         if default_url is not None:
             views.add_default_view(default_url)
