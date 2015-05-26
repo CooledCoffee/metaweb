@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from metaweb import views
-from metaweb.resps import Response, RedirectResponse
+from metaweb.resps import RedirectResponse
 from metaweb.views import View
 from testutil import TestCase
 import re
@@ -23,13 +23,20 @@ class BindTest(TestCase):
     def test_absolute_path(self):
         view = View()
         view.bind('/users')
-        self.assertEqual(view, views._abs_pathes['/users'])
+        self.assertEqual(view, views._abs_pathes['/users']['handler'])
         
     def test_regex_path(self):
         view = View()
         view.bind('/users/<id>')
         expected_path = re.compile('^/users/(?P<id>.*?)$')
-        self.assertEqual(view, views._regex_pathes[expected_path])
+        self.assertEqual(view, views._regex_pathes[expected_path]['handler'])
+        
+    def test_regex_path_with_type(self):
+        view = View()
+        view.bind('/users/<id:int>')
+        expected_path = re.compile('^/users/(?P<id>.*?)$')
+        self.assertEqual(view, views._regex_pathes[expected_path]['handler'])
+        self.assertEqual(int, views._regex_pathes[expected_path]['params']['id']['type'])
         
 class DecodeFieldsTest(TestCase):
     def test_normal(self):
@@ -86,7 +93,7 @@ class RenderTest(TestCase):
 class AddDefaultViewTest(TestCase):
     def test(self):
         views.add_default_view('/users/home')
-        view = views._abs_pathes['/']
+        view = views._abs_pathes['/']['handler']
         resp = view.render({}, {})
         self.assertIsInstance(resp, RedirectResponse)
         self.assertEqual('/users/home', resp.headers['Location'])
@@ -96,13 +103,13 @@ class LoadTest(TestCase):
         view = View(foo)
         views.load(roots=['views_test.view_test'])
         self.assertEquals(1, len(views._abs_pathes))
-        self.assertEqual(view, views._abs_pathes['/foo'])
+        self.assertEqual(view, views._abs_pathes['/foo']['handler'])
     
     def test_prefix(self):
         view = View(foo)
         views.load(roots={'views_test.view_test': '/prefix'})
         self.assertEquals(1, len(views._abs_pathes))
-        self.assertEqual(view, views._abs_pathes['/prefix/foo'])
+        self.assertEqual(view, views._abs_pathes['/prefix/foo']['handler'])
         
     def test_out_of_roots(self):
         View(foo)
@@ -112,24 +119,45 @@ class LoadTest(TestCase):
 class MatchTest(TestCase):
     def test_absolute_path(self):
         # set up
-        v = object()
+        v = {'handler': lambda: None}
         self.patches.patch('metaweb.views._abs_pathes', {'/users/': v})
         
         # test
         view, args = views.match('/users/')
-        self.assertEquals(v, view)
+        self.assertEquals(v['handler'], view)
         self.assertEqual({}, args)
         
     def test_regex_path(self):
         # set up
-        v = object()
+        v = {
+            'handler': lambda: None,
+            'params': {
+                'id': {'type': unicode},
+            },
+        }
         self.patches.patch('metaweb.views._regex_pathes', {re.compile('^/users/(?P<id>.*?)$'): v})
         
         # test
         view, args = views.match('/users/111')
-        self.assertEquals(v, view)
+        self.assertEquals(v['handler'], view)
         self.assertEqual(1, len(args))
         self.assertEqual('111', args['id'])
+        
+    def test_regex_path_with_type(self):
+        # set up
+        v = {
+            'handler': lambda: None,
+            'params': {
+                'id': {'type': int},
+            },
+        }
+        self.patches.patch('metaweb.views._regex_pathes', {re.compile('^/users/(?P<id>.*?)$'): v})
+        
+        # test
+        view, args = views.match('/users/111')
+        self.assertEquals(v['handler'], view)
+        self.assertEqual(1, len(args))
+        self.assertEqual(111, args['id'])
         
     def test_not_found(self):
         view, args = views.match('/users/create')

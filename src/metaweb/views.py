@@ -11,7 +11,7 @@ import json
 import loggingd
 import re
 
-REGEX_PATH_PARAM = re.compile('<(.*?)>')
+REGEX_PATH_PARAM = re.compile('<(.*?)(:.*?)?>')
 log = loggingd.getLogger(__name__)
 _pending_views = []
 _abs_pathes = {}
@@ -23,11 +23,21 @@ class View(Function):
     def bind(self, path):
         self.path = path
         if '<' in path and '>' in path:
+            params = {}
+            for name, type in REGEX_PATH_PARAM.findall(path):
+                if type == '':
+                    params[name] = {'type': 'unicode'}
+                else:
+                    if type == ':int':
+                        type = int
+                    else:
+                        raise Exception('Unknown type "%s".' % type[1:])
+                    params[name] = {'type': type}
             path = REGEX_PATH_PARAM.sub(lambda m: '(?P<%s>.*?)' % m.group(1), path)
             path = re.compile('^%s$' % path)
-            _regex_pathes[path] = self
+            _regex_pathes[path] = {'handler': self, 'params': params}
         else:
-            _abs_pathes[path] = self
+            _abs_pathes[path] = {'handler': self}
     
     def render(self, path_args, fields):
         try:
@@ -136,11 +146,14 @@ def load(roots=('views',)):
 def match(path):
     view = _abs_pathes.get(path)
     if view is not None:
-        return view, {}
-    for pattern, v in _regex_pathes.items():
+        return view['handler'], {}
+    for pattern, view in _regex_pathes.items():
         match = pattern.match(path)
-        if match is not None:
-            return v, match.groupdict()
+        if match is None:
+            continue
+        args = match.groupdict()
+        args = {k: view['params'][k]['type'](v) for k, v in args.items()}
+        return view['handler'], args
     return None, None
 
 def _calc_path(roots, obj_path, specified_path):

@@ -7,7 +7,8 @@ class MatchViewTest(TestCase):
     def test_found(self):
         # set up
         v = object()
-        self.patches.patch('metaweb.views._abs_pathes', {'/users/create': v})
+        self.patches.patch('metaweb.views._abs_pathes',
+                {'/users/create': {'handler': v}})
         
         # test
         view, args = coor._match_view('/users/create')
