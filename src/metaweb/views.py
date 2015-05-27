@@ -18,7 +18,7 @@ _abs_pathes = {}
 _regex_pathes = {}
 
 class View(Function):
-    mime = None
+    mimetype = None
     
     def bind(self, path):
         self.path = path
@@ -31,7 +31,7 @@ class View(Function):
                     if type == ':int':
                         type = int
                     else:
-                        raise Exception('Unknown type "%s".' % type[1:])
+                        raise Exception('Unknown type "%s" in path "%s".' % (type[1:], path))
                     params[name] = {'type': type}
             path = REGEX_PATH_PARAM.sub(lambda m: '(?P<%s>.*?)' % m.group(1), path)
             path = re.compile('^%s$' % path)
@@ -74,9 +74,11 @@ class View(Function):
         _pending_views.append(self)
         return self
     
-    def _init(self, path=None):
+    def _init(self, path=None, mimetype=None):
         super(View, self)._init()
         self._specified_path = path
+        if mimetype is not None:
+            self.mimetype = mimetype
         
     def _translate_error(self, err, code=500):
         error_code = _translate_error_code(err)
@@ -88,15 +90,15 @@ class View(Function):
         else:
             result = unicode(result)
             headers = {}
-            if self.mime:
-                headers['Content-Type'] = self.mime + '; charset=utf-8'
+            if self.mimetype is not None:
+                headers['Content-Type'] = self.mimetype
             return Response(200, result, headers)
         
 class Page(View):
-    mime = 'text/html'
+    mimetype = 'text/html; charset=utf-8'
         
 class Api(View):
-    mime = 'application/json'
+    mimetype = 'application/json'
     
     def _decode_field(self, value):
         value = super(Api, self)._decode_field(value)
