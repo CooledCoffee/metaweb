@@ -26,7 +26,7 @@ class View(Function):
             params = {}
             for name, type in REGEX_PATH_PARAM.findall(path):
                 if type == '':
-                    params[name] = {'type': 'unicode'}
+                    params[name] = {'type': unicode}
                 else:
                     if type == ':int':
                         type = int
