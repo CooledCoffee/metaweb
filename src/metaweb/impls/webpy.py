@@ -72,5 +72,6 @@ if modutil.module_exists('web'):
         if default_url is not None:
             views.add_default_view(default_url)
         mapping = ('(.+)', cls)
+        web.config.debug = False
         return web.application(mapping)
         
