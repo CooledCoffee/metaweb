@@ -43,7 +43,7 @@ if modutil.module_exists('web'):
         def _process_resp(self, resp):
             web.ctx.status = resp.status()
             for k, v in resp.headers.items():
-                web.header(k, v)
+                web.header(k, str(v))
             return resp.body
         
     class WebpyFileField(FileField):
