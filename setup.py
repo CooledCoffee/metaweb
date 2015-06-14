@@ -4,7 +4,7 @@ import setuptools
 
 setup(
     name='metaweb',
-    version='1.5.3',
+    version='1.5.4',
     author='Mengchen LEE',
     author_email='CooledCoffee@gmail.com',
     classifiers = [
