@@ -86,7 +86,6 @@ class View(Function):
         if isinstance(result, Response):
             return result
         else:
-            result = unicode(result)
             headers = {}
             if self.mimetype is not None:
                 headers['Content-Type'] = self.mimetype

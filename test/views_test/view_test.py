@@ -6,7 +6,7 @@ from testutil import TestCase
 import re
 
 def foo(a, b='2'):
-    return int(a) + int(b)
+    return str(int(a) + int(b))
 foo = View(foo)
 
 class DecorateTest(TestCase):
