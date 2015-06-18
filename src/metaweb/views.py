@@ -64,9 +64,7 @@ class View(Function):
         for k, v in fields.items():
             if k not in self.params:
                 continue
-            if isinstance(v, FileField):
-                results[k] = v
-            results[k] = self._decode_field(v)
+            results[k] = v if isinstance(v, FileField) else self._decode_field(v)
         return results
     
     def _decorate(self, func):
