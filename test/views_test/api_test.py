@@ -5,6 +5,10 @@ from metaweb.views import Api, JsonEncoder
 from testutil import TestCase
 import json
 
+@Api
+def foo(a, b=2):
+    return {'a': a, 'b': b}
+
 class JsonEncoderTest(TestCase):
     def test_normal(self):
         self.assertEqual('111', json.dumps(111, cls=JsonEncoder))
@@ -21,10 +25,6 @@ class JsonEncoderTest(TestCase):
                 return 'foo'
         self.assertEqual('"foo"', json.dumps(Foo(), cls=JsonEncoder))
 
-@Api
-def foo(a, b=2):
-    pass
-
 class TranslateResultTest(TestCase):
     def test_object(self):
         self.assertEqual('"aaa"', foo._translate_result('aaa').body)
@@ -35,4 +35,26 @@ class TranslateResultTest(TestCase):
         result = RedirectResponse('/')
         resp = foo._translate_result(result)
         self.assertEqual(result, resp)
+        
+class RenderTest(TestCase):
+    def test_normal(self):
+        resp = foo.render({}, {'a': '1', 'b': '3'})
+        self.assertEqual(200, resp.code)
+        self.assertEqual({'a': 1, 'b': 3}, json.loads(resp.body))
+        
+    def test_400(self):
+        resp = foo.render({}, {})
+        self.assertEqual(400, resp.code)
+        
+    def test_500(self):
+        # set up
+        def _view(key):
+            raise NotImplementedError('Error message.')
+        _view.__module__ = 'views.user'
+        v = Api(_view)
+        
+        # test
+        resp = v.render({}, {'key': '111'})
+        self.assertEqual(500, resp.code)
+        self.assertEqual({'message': 'Error message.', 'error': 'NOT_IMPLEMENTED_ERROR'}, json.loads(resp.body))
         

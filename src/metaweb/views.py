@@ -101,9 +101,10 @@ class Api(View):
         value = super(Api, self)._decode_field(value)
         return json.loads(value)
             
-    def _translate_error(self, err):
-        code = _translate_error_code(err)
-        return json.dumps({'error': code, 'message': str(err)})
+    def _translate_error(self, err, code=500):
+        error_code = _translate_error_code(err)
+        body = json.dumps({'error': error_code, 'message': str(err)})
+        return Response(code, body)
     
     def _translate_result(self, result):
         if isinstance(result, Response):

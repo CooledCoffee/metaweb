@@ -16,7 +16,7 @@ class DecorateTest(TestCase):
         
         # test
         View(foo)
-        self.assertEquals(1, len(views._pending_views))
+        self.assertEqual(1, len(views._pending_views))
         self.assertEqual(foo, views._pending_views[0]._func)
         
 class BindTest(TestCase):
@@ -54,8 +54,8 @@ class DecodeFieldsTest(TestCase):
 class RenderTest(TestCase):
     def test_basic(self):
         resp = foo.render({}, {'a': '1', 'b': '3'})
-        self.assertEquals(200, resp.code)
-        self.assertEquals('4', resp.body)
+        self.assertEqual(200, resp.code)
+        self.assertEqual('4', resp.body)
         
     def test_response(self):
         def foo():
@@ -67,28 +67,28 @@ class RenderTest(TestCase):
         
     def test_path_args(self):
         resp = foo.render({'a': '1'}, {'b': '3'})
-        self.assertEquals(200, resp.code)
-        self.assertEquals('4', resp.body)
+        self.assertEqual(200, resp.code)
+        self.assertEqual('4', resp.body)
         
         resp = foo.render({'a': '0'}, {'a': '1', 'b': '3'})
-        self.assertEquals(200, resp.code)
-        self.assertEquals('4', resp.body)
+        self.assertEqual(200, resp.code)
+        self.assertEqual('4', resp.body)
         
-    def test_missing_field(self):
+    def test_400(self):
         resp = foo.render({}, {})
         self.assertEqual(400, resp.code)
         
-    def test_error(self):
+    def test_500(self):
         # set up
         def _view(key):
-            raise NotImplementedError()
+            raise NotImplementedError('Error message.')
         _view.__module__ = 'views.user'
         v = View(_view)
         
         # test
         resp = v.render({}, {'key': '111'})
         self.assertEqual(500, resp.code)
-        self.assertIn('NOT_IMPLEMENTED_ERROR', resp.body)
+        self.assertEqual('NOT_IMPLEMENTED_ERROR: Error message.', resp.body)
         
 class AddDefaultViewTest(TestCase):
     def test(self):
@@ -102,19 +102,19 @@ class LoadTest(TestCase):
     def test_basic(self):
         view = View(foo)
         views.load(roots=['views_test.view_test'])
-        self.assertEquals(1, len(views._abs_pathes))
+        self.assertEqual(1, len(views._abs_pathes))
         self.assertEqual(view, views._abs_pathes['/foo']['handler'])
     
     def test_prefix(self):
         view = View(foo)
         views.load(roots={'views_test.view_test': '/prefix'})
-        self.assertEquals(1, len(views._abs_pathes))
+        self.assertEqual(1, len(views._abs_pathes))
         self.assertEqual(view, views._abs_pathes['/prefix/foo']['handler'])
         
     def test_out_of_roots(self):
         View(foo)
         views.load(roots=['metaweb.views'])
-        self.assertEquals(0, len(views._abs_pathes))
+        self.assertEqual(0, len(views._abs_pathes))
         
 class MatchTest(TestCase):
     def test_absolute_path(self):
@@ -124,7 +124,7 @@ class MatchTest(TestCase):
         
         # test
         view, args = views.match('/users/')
-        self.assertEquals(v['handler'], view)
+        self.assertEqual(v['handler'], view)
         self.assertEqual({}, args)
         
     def test_regex_path(self):
@@ -139,7 +139,7 @@ class MatchTest(TestCase):
         
         # test
         view, args = views.match('/users/111')
-        self.assertEquals(v['handler'], view)
+        self.assertEqual(v['handler'], view)
         self.assertEqual(1, len(args))
         self.assertEqual('111', args['id'])
         
@@ -155,7 +155,7 @@ class MatchTest(TestCase):
         
         # test
         view, args = views.match('/users/111')
-        self.assertEquals(v['handler'], view)
+        self.assertEqual(v['handler'], view)
         self.assertEqual(1, len(args))
         self.assertEqual(111, args['id'])
         
