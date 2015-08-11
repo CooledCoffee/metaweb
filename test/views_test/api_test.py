@@ -56,5 +56,5 @@ class RenderTest(TestCase):
         # test
         resp = v.render({}, {'key': '111'})
         self.assertEqual(500, resp.code)
-        self.assertEqual({'message': 'Error message.', 'error': 'NOT_IMPLEMENTED_ERROR'}, json.loads(resp.body))
+        self.assertEqual({'code': 'INTERNAL_ERROR', 'message': 'Error message.'}, json.loads(resp.body))
         

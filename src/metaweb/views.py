@@ -3,10 +3,10 @@ from datetime import date, datetime, time
 from decorated import Function
 from decorated.util import modutil
 from json.encoder import JSONEncoder
+from metaweb.errors import WebError
 from metaweb.files import FileField
 from metaweb.resps import Response, RedirectResponse
 import doctest
-import inflection
 import json
 import loggingd
 import re
@@ -47,7 +47,9 @@ class View(Function):
             try:
                 args = self._resolve_args(**args)
             except Exception as e:
-                raise self._translate_error(e, code=400)
+                e = WebError(400, 'ARGUMENT_MISSING', str(e))
+                resp = self._translate_error(e)
+                raise resp
             result = self._call(**args)
             return self._translate_result(result)
         except Response as resp:
@@ -78,9 +80,23 @@ class View(Function):
         if mimetype is not None:
             self.mimetype = mimetype
         
-    def _translate_error(self, err, code=500):
-        error_code = _translate_error_code(err)
-        return Response(code, '%s: %s' % (error_code, str(err)))
+    def _translate_error(self, err):
+        '''
+        >>> resp = View()._translate_error(WebError(400, 'INVALID_ARGUMENT', 'Bad argument.'))
+        >>> resp.code
+        400
+        >>> resp.body
+        '[INVALID_ARGUMENT] Bad argument.'
+
+        >>> resp = View()._translate_error(NotImplementedError('Method not implemented.'))
+        >>> resp.code
+        500
+        >>> resp.body
+        '[INTERNAL_ERROR] Method not implemented.'
+        '''
+        if not isinstance(err, WebError):
+            err = WebError(500, 'INTERNAL_ERROR', str(err))
+        return Response(err.status, str(err))
         
     def _translate_result(self, result):
         if isinstance(result, Response):
@@ -100,11 +116,25 @@ class Api(View):
     def _decode_field(self, value):
         value = super(Api, self)._decode_field(value)
         return json.loads(value)
-            
-    def _translate_error(self, err, code=500):
-        error_code = _translate_error_code(err)
-        body = json.dumps({'error': error_code, 'message': str(err)})
-        return Response(code, body)
+    
+    def _translate_error(self, err):
+        '''
+        >>> resp = Api()._translate_error(WebError(400, 'INVALID_ARGUMENT', 'Bad argument.'))
+        >>> resp.body
+        '{"message": "Bad argument.", "code": "INVALID_ARGUMENT"}'
+        >>> resp.code
+        400
+        
+        >>> resp = Api()._translate_error(NotImplementedError('Method not implemented.'))
+        >>> resp.code
+        500
+        >>> resp.body
+        '{"message": "Method not implemented.", "code": "INTERNAL_ERROR"}'
+        '''
+        if not isinstance(err, WebError):
+            err = WebError(500, 'INTERNAL_ERROR', str(err))
+        body = json.dumps(err.__json__())
+        return Response(err.status, body)
     
     def _translate_result(self, result):
         if isinstance(result, Response):
@@ -183,20 +213,6 @@ def _obj_to_path(obj):
     'metaweb.views.View'
     '''
     return obj.__module__ + '.' + obj.__name__
-
-def _translate_error_code(e):
-    '''
-    >>> _translate_error_code(AttributeError())
-    'ATTRIBUTE_ERROR'
-    >>> _translate_error_code(EOFError())
-    'EOF_ERROR'
-    >>> class MyEOFError(EOFError): pass
-    >>> _translate_error_code(MyEOFError())
-    'MY_EOF_ERROR'
-    '''
-    code = type(e).__name__
-    code = inflection.underscore(code)
-    return code.upper()
 
 if __name__ == '__main__':
     doctest.testmod()

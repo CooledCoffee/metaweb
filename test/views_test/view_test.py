@@ -88,7 +88,7 @@ class RenderTest(TestCase):
         # test
         resp = v.render({}, {'key': '111'})
         self.assertEqual(500, resp.code)
-        self.assertEqual('NOT_IMPLEMENTED_ERROR: Error message.', resp.body)
+        self.assertEqual('[INTERNAL_ERROR] Error message.', resp.body)
         
 class AddDefaultViewTest(TestCase):
     def test(self):
