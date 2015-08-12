@@ -7,9 +7,10 @@ import logging
 
 log = logging.getLogger(__name__)
 
-def coor_maker(base_class=object):
+def coor_maker(base_class=object, context_class=None):
+    context_class_ = context_class or Context
     class _Coor(base_class):
-        context_class = Context
+        context_class = context_class_
         
         @log_enter('Handling url {path} ...')
         @log_error('Failed to handle url {path}.', exc_info=True)
