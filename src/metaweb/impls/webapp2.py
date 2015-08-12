@@ -16,7 +16,7 @@ if modutil.module_exists('webapp2'):
             self._process_resp(resp)
             
         def _process_resp(self, resp):
-            self.response.set_status(resp.status())
+            self.response.set_status(resp.status_string())
             for k, v in resp.headers.items():
                 self.response.headers[k] = str(v)
             self.response.out.write(resp.body)

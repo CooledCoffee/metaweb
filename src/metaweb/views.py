@@ -83,13 +83,13 @@ class View(Function):
     def _translate_error(self, err):
         '''
         >>> resp = View()._translate_error(WebError(400, 'INVALID_ARGUMENT', 'Bad argument.'))
-        >>> resp.code
+        >>> resp.status
         400
         >>> resp.body
         '[INVALID_ARGUMENT] Bad argument.'
 
         >>> resp = View()._translate_error(NotImplementedError('Method not implemented.'))
-        >>> resp.code
+        >>> resp.status
         500
         >>> resp.body
         '[INTERNAL_ERROR] Method not implemented.'
@@ -122,11 +122,11 @@ class Api(View):
         >>> resp = Api()._translate_error(WebError(400, 'INVALID_ARGUMENT', 'Bad argument.'))
         >>> resp.body
         '{"message": "Bad argument.", "code": "INVALID_ARGUMENT"}'
-        >>> resp.code
+        >>> resp.status
         400
         
         >>> resp = Api()._translate_error(NotImplementedError('Method not implemented.'))
-        >>> resp.code
+        >>> resp.status
         500
         >>> resp.body
         '{"message": "Method not implemented.", "code": "INTERNAL_ERROR"}'

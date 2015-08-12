@@ -54,7 +54,7 @@ class DecodeFieldsTest(TestCase):
 class RenderTest(TestCase):
     def test_basic(self):
         resp = foo.render({}, {'a': '1', 'b': '3'})
-        self.assertEqual(200, resp.code)
+        self.assertEqual(200, resp.status)
         self.assertEqual('4', resp.body)
         
     def test_response(self):
@@ -67,16 +67,16 @@ class RenderTest(TestCase):
         
     def test_path_args(self):
         resp = foo.render({'a': '1'}, {'b': '3'})
-        self.assertEqual(200, resp.code)
+        self.assertEqual(200, resp.status)
         self.assertEqual('4', resp.body)
         
         resp = foo.render({'a': '0'}, {'a': '1', 'b': '3'})
-        self.assertEqual(200, resp.code)
+        self.assertEqual(200, resp.status)
         self.assertEqual('4', resp.body)
         
     def test_400(self):
         resp = foo.render({}, {})
-        self.assertEqual(400, resp.code)
+        self.assertEqual(400, resp.status)
         
     def test_500(self):
         # set up
@@ -87,7 +87,7 @@ class RenderTest(TestCase):
         
         # test
         resp = v.render({}, {'key': '111'})
-        self.assertEqual(500, resp.code)
+        self.assertEqual(500, resp.status)
         self.assertEqual('[INTERNAL_ERROR] Error message.', resp.body)
         
 class AddDefaultViewTest(TestCase):

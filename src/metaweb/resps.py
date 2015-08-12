@@ -3,22 +3,22 @@ import doctest
 import httplib
 
 class Response(Exception):
-    def __init__(self, code, body, headers=None, cookies=None):
+    def __init__(self, status, body, headers=None, cookies=None):
         super(Response, self).__init__('')
-        self.code = code
+        self.status = status
         self.body = body
         self.headers = headers or {}
         self.cookies = cookies or {}
         
-    def status(self):
+    def status_string(self):
         '''
-        >>> Response(200, '').status()
+        >>> Response(200, '').status_string()
         '200 OK'
-        >>> Response(404, '').status()
+        >>> Response(404, '').status_string()
         '404 Not Found'
         '''
-        message = httplib.responses[self.code]
-        return '%d %s' % (self.code, message)
+        name = httplib.responses[self.status]
+        return '%d %s' % (self.status, name)
         
 class MovedResponse(Response):
     def __init__(self, url):

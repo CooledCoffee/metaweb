@@ -41,7 +41,7 @@ if modutil.module_exists('web'):
                     if k.startswith('HTTP_')}
         
         def _process_resp(self, resp):
-            web.ctx.status = resp.status()
+            web.ctx.status = resp.status_string()
             for k, v in resp.headers.items():
                 web.header(k, str(v))
             return resp.body

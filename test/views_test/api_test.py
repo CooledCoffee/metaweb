@@ -39,12 +39,12 @@ class TranslateResultTest(TestCase):
 class RenderTest(TestCase):
     def test_normal(self):
         resp = foo.render({}, {'a': '1', 'b': '3'})
-        self.assertEqual(200, resp.code)
+        self.assertEqual(200, resp.status)
         self.assertEqual({'a': 1, 'b': 3}, json.loads(resp.body))
         
     def test_400(self):
         resp = foo.render({}, {})
-        self.assertEqual(400, resp.code)
+        self.assertEqual(400, resp.status)
         
     def test_500(self):
         # set up
@@ -55,6 +55,6 @@ class RenderTest(TestCase):
         
         # test
         resp = v.render({}, {'key': '111'})
-        self.assertEqual(500, resp.code)
+        self.assertEqual(500, resp.status)
         self.assertEqual({'code': 'INTERNAL_ERROR', 'message': 'Error message.'}, json.loads(resp.body))
         
