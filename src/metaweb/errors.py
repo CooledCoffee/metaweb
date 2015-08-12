@@ -2,21 +2,28 @@
 import doctest
 
 class WebError(Exception):
-    def __init__(self, status, code, message):
+    def __init__(self, status, code, message, **extras):
         self.status = status
         self.code = code
         self.message = message
+        self._extras = extras
         
     def __json__(self):
         '''
         >>> e = WebError(500, 'INTERNAL_ERROR', 'Error message.')
         >>> e.__json__()
         {'message': 'Error message.', 'code': 'INTERNAL_ERROR'}
+        
+        >>> e = WebError(500, 'INTERNAL_ERROR', 'Error message.', param='key')
+        >>> e.__json__()
+        {'message': 'Error message.', 'code': 'INTERNAL_ERROR', 'param': 'key'}
         '''
-        return {
+        result = {
             'code': self.code,
             'message': self.message,
         }
+        result.update(self._extras)
+        return result
         
     def __str__(self):
         '''
@@ -25,6 +32,22 @@ class WebError(Exception):
         '[INTERNAL_ERROR] Error message.'
         '''
         return '[%s] %s' % (self.code, self.message)
+    
+class ValidationError(WebError):
+    def __init__(self, param, code, message):
+        super(ValidationError, self).__init__(400, code, message, param=param)
+        self.param = param
+        self.code = code
+        self.message = message
+        
+    def __str__(self):
+        '''
+        >>> e = ValidationError('key', 'INVALID_ARGUMENT', 'Error message.')
+        >>> str(e)
+        '[INVALID_ARGUMENT] Error message. (param=key)'
+        '''
+        result = super(ValidationError, self).__str__()
+        return '%s (param=%s)' % (result, self.param)
     
 if __name__ == '__main__':
     doctest.testmod()
