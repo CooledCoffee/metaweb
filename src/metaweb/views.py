@@ -1,9 +1,10 @@
 # -*- coding: UTF-8 -*-
 from datetime import date, datetime, time
 from decorated import Function
+from decorated.base.function import ArgError
 from decorated.util import modutil
 from json.encoder import JSONEncoder
-from metaweb.errors import WebError
+from metaweb.errors import WebError, ValidationError
 from metaweb.files import FileField
 from metaweb.resps import Response, RedirectResponse
 import doctest
@@ -46,8 +47,8 @@ class View(Function):
             args.update(fields)
             try:
                 args = self._resolve_args(**args)
-            except Exception as e:
-                e = WebError(400, 'ARGUMENT_MISSING', str(e))
+            except ArgError as e:
+                e = ValidationError(e.param, 'ARGUMENT_MISSING', str(e))
                 resp = self._translate_error(e)
                 raise resp
             result = self._call(**args)
