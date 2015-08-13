@@ -75,7 +75,8 @@ class Regex(Type):
         self._pattern = re.compile(pattern)
         
     def _validate(self, value):
-        pass
+        if not self._pattern.match(value):
+            return 'Value does not match "%s".' % self._pattern.pattern
 regex = Regex
 
 if __name__ == '__main__':

@@ -144,3 +144,10 @@ class RegexTest(TestCase):
             pass
         foo('123456')
         
+    def test_failed(self):
+        @Regex('value', '\\d+')
+        def foo(value):
+            pass
+        with self.assertRaises(ValidationError):
+            foo('')
+        
