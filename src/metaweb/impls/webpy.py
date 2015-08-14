@@ -50,6 +50,9 @@ if modutil.module_exists('web'):
                 resp = self.render(path)
                 return self._process_resp(resp)
             
+            def _read_cookies(self):
+                return web.cookies()
+            
             def _read_fields(self):
                 fields = webapi.rawinput('both')
                 try:

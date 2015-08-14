@@ -2,7 +2,7 @@
 import doctest
 
 class WebError(Exception):
-    def __init__(self, status, code, message, **extras):
+    def __init__(self, status, code, message='', **extras):
         self.status = status
         self.code = code
         self.message = message
@@ -34,8 +34,8 @@ class WebError(Exception):
         return '[%s] %s' % (self.code, self.message)
     
 class ValidationError(WebError):
-    def __init__(self, param, code, message):
-        super(ValidationError, self).__init__(400, code, message, param=param)
+    def __init__(self, param, code, message=''):
+        super(ValidationError, self).__init__(400, code, message=message, param=param)
         self.param = param
         self.code = code
         self.message = message
