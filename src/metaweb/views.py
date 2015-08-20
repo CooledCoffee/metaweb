@@ -94,10 +94,10 @@ class View(Function):
         >>> resp.status
         500
         >>> resp.body
-        '[INTERNAL_ERROR] Method not implemented.'
+        '[INTERNAL_ERROR] Server encountered an internal error.'
         '''
         if not isinstance(err, WebError):
-            err = WebError(500, 'INTERNAL_ERROR', str(err))
+            err = WebError(500, 'INTERNAL_ERROR', 'Server encountered an internal error.')
         return Response(err.status, str(err))
         
     def _translate_result(self, result):
@@ -131,10 +131,10 @@ class Api(View):
         >>> resp.status
         500
         >>> resp.body
-        '{"message": "Method not implemented.", "code": "INTERNAL_ERROR"}'
+        '{"message": "Server encountered an internal error.", "code": "INTERNAL_ERROR"}'
         '''
         if not isinstance(err, WebError):
-            err = WebError(500, 'INTERNAL_ERROR', str(err))
+            err = WebError(500, 'INTERNAL_ERROR', 'Server encountered an internal error.')
         body = json.dumps(err.__json__())
         return Response(err.status, body)
     
