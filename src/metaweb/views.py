@@ -40,7 +40,7 @@ class View(Function):
         else:
             _abs_pathes[path] = {'handler': self}
     
-    def render(self, path_args, fields):
+    def render(self, ctx, path_args, fields):
         try:
             fields = self._decode_fields(fields)
             args = path_args
@@ -51,8 +51,9 @@ class View(Function):
                 e = ValidationError(e.param, 'ARGUMENT_MISSING', str(e))
                 resp = self._translate_error(e)
                 raise resp
-            result = self._call(**args)
-            return self._translate_result(result)
+            with ctx:
+                result = self._call(**args)
+                return self._translate_result(result)
         except Response as resp:
             return resp
         except Exception as e:

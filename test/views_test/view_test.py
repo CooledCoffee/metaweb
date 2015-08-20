@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from decorated.base.context import Context
 from metaweb import views
 from metaweb.resps import RedirectResponse
 from metaweb.views import View
@@ -53,7 +54,7 @@ class DecodeFieldsTest(TestCase):
         
 class RenderTest(TestCase):
     def test_basic(self):
-        resp = foo.render({}, {'a': '1', 'b': '3'})
+        resp = foo.render(Context(), {}, {'a': '1', 'b': '3'})
         self.assertEqual(200, resp.status)
         self.assertEqual('4', resp.body)
         
@@ -62,20 +63,20 @@ class RenderTest(TestCase):
             raise RedirectResponse('/redirect')
         foo.__module__ = 'views.user'
         foo = View(foo)
-        resp = foo.render({}, {})
+        resp = foo.render(Context(), {}, {})
         self.assertIsInstance(resp, RedirectResponse)
         
     def test_path_args(self):
-        resp = foo.render({'a': '1'}, {'b': '3'})
+        resp = foo.render(Context(), {'a': '1'}, {'b': '3'})
         self.assertEqual(200, resp.status)
         self.assertEqual('4', resp.body)
         
-        resp = foo.render({'a': '0'}, {'a': '1', 'b': '3'})
+        resp = foo.render(Context(), {'a': '0'}, {'a': '1', 'b': '3'})
         self.assertEqual(200, resp.status)
         self.assertEqual('4', resp.body)
         
     def test_400(self):
-        resp = foo.render({}, {})
+        resp = foo.render(Context(), {}, {})
         self.assertEqual(400, resp.status)
         
     def test_500(self):
@@ -86,7 +87,7 @@ class RenderTest(TestCase):
         v = View(_view)
         
         # test
-        resp = v.render({}, {'key': '111'})
+        resp = v.render(Context(), {}, {'key': '111'})
         self.assertEqual(500, resp.status)
         self.assertEqual('[INTERNAL_ERROR] Error message.', resp.body)
         
@@ -94,7 +95,7 @@ class AddDefaultViewTest(TestCase):
     def test(self):
         views.add_default_view('/users/home')
         view = views._abs_pathes['/']['handler']
-        resp = view.render({}, {})
+        resp = view.render(Context(), {}, {})
         self.assertIsInstance(resp, RedirectResponse)
         self.assertEqual('/users/home', resp.headers['Location'])
         

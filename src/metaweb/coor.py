@@ -22,15 +22,8 @@ def coor_maker(base_class=object, context_class=None):
             fields, headers, cookies = self._parse_request()
             for k, v in fields.items():
                 log.debug('Field %s=%s' % (k, v))
-            with self._build_context(path, headers, cookies):
-                return view.render(path_args, fields)
-            
-        def _build_context(self, path, headers, cookies):
-            ctx = self.context_class()
-            ctx.path = path
-            ctx.headers = headers
-            ctx.cookies = cookies
-            return ctx
+            ctx = self.context_class(path=path, headers=headers, cookies=cookies)
+            return view.render(ctx, path_args, fields)
         
         def _parse_request(self):
             fields = self._read_fields()
