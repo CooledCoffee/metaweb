@@ -54,7 +54,14 @@ class DecodeFieldsTest(TestCase):
         
 class RenderTest(TestCase):
     def test_basic(self):
-        resp = foo.render(Context(), {}, {'a': '1', 'b': '3'})
+        request = {
+            'cookies': {},
+            'fields': {'a': '1', 'b': '3'},
+            'headers': {},
+            'path': '/test',
+            'path_args': {},
+        }
+        resp = foo.render(request, Context)
         self.assertEqual(200, resp.status)
         self.assertEqual('4', resp.body)
         
@@ -63,39 +70,80 @@ class RenderTest(TestCase):
             raise RedirectResponse('/redirect')
         foo.__module__ = 'views.user'
         foo = View(foo)
-        resp = foo.render(Context(), {}, {})
+        request = {
+            'cookies': {},
+            'fields': {},
+            'headers': {},
+            'path': '/test',
+            'path_args': {},
+        }
+        resp = foo.render(request, Context)
         self.assertIsInstance(resp, RedirectResponse)
         
     def test_path_args(self):
-        resp = foo.render(Context(), {'a': '1'}, {'b': '3'})
+        request = {
+            'cookies': {},
+            'fields': {'b': '3'},
+            'headers': {},
+            'path': '/test',
+            'path_args': {'a': '1'},
+        }
+        resp = foo.render(request, Context)
         self.assertEqual(200, resp.status)
         self.assertEqual('4', resp.body)
         
-        resp = foo.render(Context(), {'a': '0'}, {'a': '1', 'b': '3'})
+        request = {
+            'cookies': {},
+            'fields': {'a': '1', 'b': '3'},
+            'headers': {},
+            'path': '/test',
+            'path_args': {'a': '0'},
+        }
+        resp = foo.render(request, Context)
         self.assertEqual(200, resp.status)
         self.assertEqual('4', resp.body)
         
     def test_400(self):
-        resp = foo.render(Context(), {}, {})
+        request = {
+            'cookies': {},
+            'fields': {},
+            'headers': {},
+            'path': '/test',
+            'path_args': {},
+        }
+        resp = foo.render(request, Context)
         self.assertEqual(400, resp.status)
         
     def test_500(self):
         # set up
-        def _view(key):
-            raise NotImplementedError('Error message.')
+        def _view():
+            raise NotImplementedError()
         _view.__module__ = 'views.user'
         v = View(_view)
         
         # test
-        resp = v.render(Context(), {}, {'key': '111'})
+        request = {
+            'cookies': {},
+            'fields': {},
+            'headers': {},
+            'path': '/test',
+            'path_args': {},
+        }
+        resp = v.render(request, Context)
         self.assertEqual(500, resp.status)
-        self.assertEqual('[INTERNAL_ERROR] Error message.', resp.body)
         
 class AddDefaultViewTest(TestCase):
     def test(self):
         views.add_default_view('/users/home')
+        request = {
+            'cookies': {},
+            'fields': {},
+            'headers': {},
+            'path': '/',
+            'path_args': {},
+        }
         view = views._abs_pathes['/']['handler']
-        resp = view.render(Context(), {}, {})
+        resp = view.render(request, Context)
         self.assertIsInstance(resp, RedirectResponse)
         self.assertEqual('/users/home', resp.headers['Location'])
         

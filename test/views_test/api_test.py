@@ -39,23 +39,43 @@ class TranslateResultTest(TestCase):
         
 class RenderTest(TestCase):
     def test_normal(self):
-        resp = foo.render(Context(), {}, {'a': '1', 'b': '3'})
+        request = {
+            'cookies': {},
+            'fields': {'a': '1', 'b': '3'},
+            'headers': {},
+            'path': '/test',
+            'path_args': {},
+        }
+        resp = foo.render(request, Context)
         self.assertEqual(200, resp.status)
         self.assertEqual({'a': 1, 'b': 3}, json.loads(resp.body))
         
     def test_400(self):
-        resp = foo.render(Context(), {}, {})
+        request = {
+            'cookies': {},
+            'fields': {},
+            'headers': {},
+            'path': '/test',
+            'path_args': {},
+        }
+        resp = foo.render(request, Context)
         self.assertEqual(400, resp.status)
         
     def test_500(self):
         # set up
-        def _view(key):
-            raise NotImplementedError('Error message.')
+        def _view():
+            raise NotImplementedError()
         _view.__module__ = 'views.user'
         v = Api(_view)
         
         # test
-        resp = v.render(Context(), {}, {'key': '111'})
+        request = {
+            'cookies': {},
+            'fields': {},
+            'headers': {},
+            'path': '/test',
+            'path_args': {},
+        }
+        resp = v.render(request, Context)
         self.assertEqual(500, resp.status)
-        self.assertEqual({'code': 'INTERNAL_ERROR', 'message': 'Error message.'}, json.loads(resp.body))
         
