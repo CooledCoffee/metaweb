@@ -172,9 +172,10 @@ class MatchTest(TestCase):
         self.patches.patch('metaweb.views._abs_pathes', {'/users/': v})
         
         # test
-        view, args = views.match('/users/')
-        self.assertEqual(v['handler'], view)
-        self.assertEqual({}, args)
+        path = views.match('/users/')
+        self.assertEqual('/users/', path)
+        self.assertEqual(v['handler'], path.handler)
+        self.assertEqual({}, path.args)
         
     def test_regex_path(self):
         # set up
@@ -187,10 +188,10 @@ class MatchTest(TestCase):
         self.patches.patch('metaweb.views._regex_pathes', {re.compile('^/users/(?P<id>.*?)$'): v})
         
         # test
-        view, args = views.match('/users/111')
-        self.assertEqual(v['handler'], view)
-        self.assertEqual(1, len(args))
-        self.assertEqual('111', args['id'])
+        path = views.match('/users/111')
+        self.assertEqual('/users/111', path)
+        self.assertEqual(v['handler'], path.handler)
+        self.assertEqual({'id': '111'}, path.args)
         
     def test_regex_path_with_type(self):
         # set up
@@ -203,13 +204,12 @@ class MatchTest(TestCase):
         self.patches.patch('metaweb.views._regex_pathes', {re.compile('^/users/(?P<id>.*?)$'): v})
         
         # test
-        view, args = views.match('/users/111')
-        self.assertEqual(v['handler'], view)
-        self.assertEqual(1, len(args))
-        self.assertEqual(111, args['id'])
+        path = views.match('/users/111')
+        self.assertEqual('/users/111', path)
+        self.assertEqual(v['handler'], path.handler)
+        self.assertEqual({'id': 111}, path.args)
         
     def test_not_found(self):
-        view, args = views.match('/users/create')
-        self.assertIsNone(view)
-        self.assertIsNone(args)
+        path = views.match('/users/create')
+        self.assertIsNone(path)
         

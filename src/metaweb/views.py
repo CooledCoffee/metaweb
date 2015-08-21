@@ -6,6 +6,7 @@ from decorated.util import modutil
 from json.encoder import JSONEncoder
 from metaweb.errors import WebError, ValidationError
 from metaweb.files import FileField
+from metaweb.path import Path
 from metaweb.resps import Response, RedirectResponse
 import doctest
 import json
@@ -178,15 +179,20 @@ def load(roots=('views',)):
 def match(path):
     view = _abs_pathes.get(path)
     if view is not None:
-        return view['handler'], {}
+        path = Path(path)
+        path.handler = view['handler']
+        return path
     for pattern, view in _regex_pathes.items():
         match = pattern.match(path)
         if match is None:
             continue
         args = match.groupdict()
         args = {k: view['params'][k]['type'](v) for k, v in args.items()}
-        return view['handler'], args
-    return None, None
+        path = Path(path)
+        path.handler = view['handler']
+        path.args = args
+        return path
+    return None
 
 def _calc_path(roots, obj_path, specified_path):
     '''

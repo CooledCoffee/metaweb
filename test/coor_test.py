@@ -11,9 +11,10 @@ class MatchViewTest(TestCase):
                 {'/users/create': {'handler': v}})
         
         # test
-        view, args = coor._match_view('/users/create')
-        self.assertEquals(v, view)
-        self.assertEquals({}, args)
+        path = coor._match_view('/users/create')
+        self.assertEqual('/users/create', path)
+        self.assertEquals(v, path.handler)
+        self.assertEquals({}, path.args)
         
     def test_not_found(self):
         with self.assertRaises(NotFoundResponse):

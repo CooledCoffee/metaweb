@@ -16,7 +16,7 @@ def coor_maker(base_class=object, context_class=None):
         @log_error('Failed to handle url {path}.', exc_info=True)
         def render(self, path):
             try:
-                view, path_args = _match_view(path)
+                path = _match_view(path)
             except Response as resp:
                 return resp
             fields, headers, cookies = self._parse_request()
@@ -27,9 +27,8 @@ def coor_maker(base_class=object, context_class=None):
                 'fields': fields,
                 'headers': headers,
                 'path': path,
-                'path_args': path_args,
             }
-            return view.render(request, self.context_class)
+            return path.handler.render(request, self.context_class)
         
         def _parse_request(self):
             fields = self._read_fields()
@@ -49,7 +48,7 @@ def coor_maker(base_class=object, context_class=None):
 
 @log_error('View for {path} cannot be found.')
 def _match_view(path):
-    view, args = views.match(path)
-    if view is None:
+    path = views.match(path)
+    if path is None:
         raise NotFoundResponse()
-    return view, args
+    return path
