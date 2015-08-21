@@ -28,7 +28,7 @@ def coor_maker(base_class=object, context_class=None):
                 'headers': headers,
                 'path': path,
             }
-            return path.handler.render(request, self.context_class)
+            return path.view.render(request, self.context_class)
         
         def _parse_request(self):
             fields = self._read_fields()

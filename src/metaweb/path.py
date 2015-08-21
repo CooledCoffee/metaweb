@@ -12,7 +12,7 @@ class Path(str):
         '''
         super(Path, self).__init__(path)
         self.args = {}
-        self.handler = None
+        self.view = None
     
 if __name__ == '__main__':
     doctest.testmod()

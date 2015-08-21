@@ -25,34 +25,25 @@ class View(Function):
     def bind(self, path):
         self.path = path
         if '<' in path and '>' in path:
-            params = {}
             for name, type in REGEX_PATH_PARAM.findall(path):
                 if type == '':
-                    params[name] = {'type': unicode}
+                    type = unicode
+                elif type == ':int':
+                    type = int
                 else:
-                    if type == ':int':
-                        type = int
-                    else:
-                        raise Exception('Unknown type "%s" in path "%s".' % (type[1:], path))
-                    params[name] = {'type': type}
+                    raise Exception('Unknown type "%s" in path "%s".' % (type[1:], path))
+                self._path_params[name] = {'type': type}
             path = REGEX_PATH_PARAM.sub(lambda m: '(?P<%s>.*?)' % m.group(1), path)
             path = re.compile('^%s$' % path)
-            _regex_pathes[path] = {'handler': self, 'params': params}
+            _regex_pathes[path] = self
         else:
-            _abs_pathes[path] = {'handler': self}
+            _abs_pathes[path] = self
     
     def render(self, request, context_class):
         try:
-            fields = self._decode_fields(request['fields'])
-            args = request['path_args']
-            args.update(fields)
-            try:
-                args = self._resolve_args(**args)
-            except ArgError as e:
-                e = ValidationError(e.param, 'ARGUMENT_MISSING', str(e))
-                resp = self._translate_error(e)
-                raise resp
             with context_class(request=request):
+                args = self._parse_args(request['fields'], request['path'].args)
+                args = self._resolve_args(**args)
                 result = self._call(**args)
                 return self._translate_result(result)
         except Response as resp:
@@ -64,14 +55,6 @@ class View(Function):
     def _decode_field(self, value):
         return value if isinstance(value, unicode) else value.decode('utf-8')
     
-    def _decode_fields(self, fields):
-        results = {}
-        for k, v in fields.items():
-            if k not in self.params:
-                continue
-            results[k] = v if isinstance(v, FileField) else self._decode_field(v)
-        return results
-    
     def _decorate(self, func):
         super(View, self)._decorate(func)
         _pending_views.append(self)
@@ -82,7 +65,23 @@ class View(Function):
         self._specified_path = path
         if mimetype is not None:
             self.mimetype = mimetype
+        self._path_params = {}
         
+    def _parse_args(self, fields, path_args):
+        results = {}
+        defaults = dict(self.optional_params)
+        for param in self.params:
+            if param in fields:
+                results[param] = self._decode_field(fields[param])
+            elif param in path_args:
+                type = self._path_params[param]
+                results[param] = type(path_args[param])
+            elif param in defaults:
+                results[param] = defaults[param]
+            else:
+                raise ValidationError(param, 'ARGUMENT_MISSING')
+        return results
+    
     def _translate_error(self, err):
         '''
         >>> resp = View()._translate_error(WebError(400, 'INVALID_ARGUMENT', 'Bad argument.'))
@@ -180,16 +179,15 @@ def match(path):
     view = _abs_pathes.get(path)
     if view is not None:
         path = Path(path)
-        path.handler = view['handler']
+        path.view = view
         return path
     for pattern, view in _regex_pathes.items():
         match = pattern.match(path)
         if match is None:
             continue
         args = match.groupdict()
-        args = {k: view['params'][k]['type'](v) for k, v in args.items()}
         path = Path(path)
-        path.handler = view['handler']
+        path.view = view
         path.args = args
         return path
     return None

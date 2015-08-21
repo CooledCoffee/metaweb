@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import date, datetime, time
 from decorated.base.context import Context
+from metaweb.path import Path
 from metaweb.resps import RedirectResponse
 from metaweb.views import Api, JsonEncoder
 from testutil import TestCase
@@ -43,8 +44,7 @@ class RenderTest(TestCase):
             'cookies': {},
             'fields': {'a': '1', 'b': '3'},
             'headers': {},
-            'path': '/test',
-            'path_args': {},
+            'path': Path('/test'),
         }
         resp = foo.render(request, Context)
         self.assertEqual(200, resp.status)
@@ -55,8 +55,7 @@ class RenderTest(TestCase):
             'cookies': {},
             'fields': {},
             'headers': {},
-            'path': '/test',
-            'path_args': {},
+            'path': Path('/test'),
         }
         resp = foo.render(request, Context)
         self.assertEqual(400, resp.status)
@@ -73,8 +72,7 @@ class RenderTest(TestCase):
             'cookies': {},
             'fields': {},
             'headers': {},
-            'path': '/test',
-            'path_args': {},
+            'path': Path('/test'),
         }
         resp = v.render(request, Context)
         self.assertEqual(500, resp.status)

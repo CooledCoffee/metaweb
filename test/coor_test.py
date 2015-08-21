@@ -8,12 +8,12 @@ class MatchViewTest(TestCase):
         # set up
         v = object()
         self.patches.patch('metaweb.views._abs_pathes',
-                {'/users/create': {'handler': v}})
+                {'/users/create': v})
         
         # test
         path = coor._match_view('/users/create')
         self.assertEqual('/users/create', path)
-        self.assertEquals(v, path.handler)
+        self.assertEquals(v, path.view)
         self.assertEquals({}, path.args)
         
     def test_not_found(self):
