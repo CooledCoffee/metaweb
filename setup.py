@@ -4,7 +4,7 @@ import setuptools
 
 setup(
     name='metaweb',
-    version='1.6.1',
+    version='1.6.2',
     author='Mengchen LEE',
     author_email='CooledCoffee@gmail.com',
     classifiers = [
@@ -26,5 +26,5 @@ setup(
     ],
     package_dir={'': 'src'},
     packages=setuptools.find_packages(where='src'),
-    url='https://github.com/CooledCoffee/metaweb/',
+    url='https://package-insights.appspot.com/packages/metaweb'
 )
