@@ -11,7 +11,7 @@ class Validator(Function):
         if error is None:
             return super(Validator, self)._call(*args, **kw)
         else:
-            raise ValidationError(self._param, self._code, error)
+            raise ValidationError(self._code, param=self._param, message=error)
         
     def _init(self, param, code):
         super(Validator, self)._init()

@@ -34,20 +34,21 @@ class WebError(Exception):
         return '[%s] %s' % (self.code, self.message)
     
 class ValidationError(WebError):
-    def __init__(self, param, code, message=''):
+    def __init__(self, code, param=None, message=''):
         super(ValidationError, self).__init__(400, code, message=message, param=param)
-        self.param = param
-        self.code = code
-        self.message = message
         
     def __str__(self):
         '''
-        >>> e = ValidationError('key', 'INVALID_ARGUMENT', 'Error message.')
-        >>> str(e)
+        >>> str(ValidationError('INVALID_ARGUMENT', param='key', message='Error message.'))
         '[INVALID_ARGUMENT] Error message. (param=key)'
+        >>> str(ValidationError('INVALID_ARGUMENT', message='Error message.'))
+        '[INVALID_ARGUMENT] Error message.'
         '''
         result = super(ValidationError, self).__str__()
-        return '%s (param=%s)' % (result, self.param)
+        param = self._extras.get('param')
+        if param is not None:
+            result += ' (param=%s)' % param
+        return result
     
 if __name__ == '__main__':
     doctest.testmod()

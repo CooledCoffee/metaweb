@@ -29,7 +29,7 @@ class ValidatorTest(TestCase):
         # test
         with self.assertRaises(ValidationError) as ctx:
             foo('aaa')
-        self.assertEqual('key', ctx.exception.param)
+        self.assertEqual('key', ctx.exception._extras['param'])
         self.assertEqual('ERROR', ctx.exception.code)
         self.assertEqual('error message', ctx.exception.message)
         
