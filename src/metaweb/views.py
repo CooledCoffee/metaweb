@@ -32,7 +32,7 @@ class View(Function):
                     type = int
                 else:
                     raise Exception('Unknown type "%s" in path "%s".' % (type[1:], path))
-                self._path_params[name] = {'type': type}
+                self._path_params[name] = type
             path = REGEX_PATH_PARAM.sub(lambda m: '(?P<%s>.*?)' % m.group(1), path)
             path = re.compile('^%s$' % path)
             _regex_pathes[path] = self
