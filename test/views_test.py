@@ -54,10 +54,6 @@ class ParseArgsTest(TestCase):
         # basic test
         fields = foo._parse_args({'b': '2'}, {'a': '1'})
         self.assertEqual({'a': 1, 'b': '2'}, fields)
-        
-    def test_chinese(self):
-        fields = foo._parse_args({'a': u'中文'.encode('utf-8')}, {})
-        self.assertEqual({'a': u'中文', 'b': '2'}, fields)
 
     def test_extra_fields(self):
         fields = foo._parse_args({'a': '1', 'b': '2', 'timestamp': '111'}, {})
@@ -71,11 +67,24 @@ class RenderTest(TestCase):
             'headers': {},
             'path': Path('/test'),
         }
-        resp = foo.render(request, Context)
-        self.assertEqual(200, resp.status)
-        self.assertEqual('4', resp.body)
+        resp = foo.render(request)
+        self.assertEqual('4', resp)
         
-    def test_response(self):
+    def test_return_response(self):
+        def foo():
+            return RedirectResponse('/redirect')
+        foo.__module__ = 'views.user'
+        foo = View(foo)
+        request = {
+            'cookies': {},
+            'fields': {},
+            'headers': {},
+            'path': Path('/test'),
+        }
+        resp = foo.render(request)
+        self.assertIsInstance(resp, RedirectResponse)
+        
+    def test_raise_response(self):
         def foo():
             raise RedirectResponse('/redirect')
         foo.__module__ = 'views.user'
@@ -86,35 +95,8 @@ class RenderTest(TestCase):
             'headers': {},
             'path': Path('/test'),
         }
-        resp = foo.render(request, Context)
-        self.assertIsInstance(resp, RedirectResponse)
-        
-    def test_400(self):
-        request = {
-            'cookies': {},
-            'fields': {},
-            'headers': {},
-            'path': Path('/test'),
-        }
-        resp = foo.render(request, Context)
-        self.assertEqual(400, resp.status)
-        
-    def test_500(self):
-        # set up
-        def _view():
-            raise NotImplementedError()
-        _view.__module__ = 'views.user'
-        v = View(_view)
-        
-        # test
-        request = {
-            'cookies': {},
-            'fields': {},
-            'headers': {},
-            'path': Path('/test'),
-        }
-        resp = v.render(request, Context)
-        self.assertEqual(500, resp.status)
+        with self.assertRaises(RedirectResponse):
+            foo.render(request)
         
 class AddDefaultViewTest(TestCase):
     def test(self):
@@ -126,20 +108,20 @@ class AddDefaultViewTest(TestCase):
             'path': Path('/'),
         }
         view = views._abs_pathes['/']
-        resp = view.render(request, Context)
-        self.assertIsInstance(resp, RedirectResponse)
-        self.assertEqual('/users/home', resp.headers['Location'])
+        with self.assertRaises(RedirectResponse) as ctx:
+            view.render(request)
+        self.assertEqual('/users/home', ctx.exception.headers['Location'])
         
 class LoadTest(TestCase):
     def test_basic(self):
         view = View(foo)
-        views.load(roots=['views_test.view_test'])
+        views.load(roots=['views_test'])
         self.assertEqual(1, len(views._abs_pathes))
         self.assertEqual(view, views._abs_pathes['/foo'])
     
     def test_prefix(self):
         view = View(foo)
-        views.load(roots={'views_test.view_test': '/prefix'})
+        views.load(roots={'views_test': '/prefix'})
         self.assertEqual(1, len(views._abs_pathes))
         self.assertEqual(view, views._abs_pathes['/prefix/foo'])
         

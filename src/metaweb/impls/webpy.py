@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 from decorated.util import modutil
+import json
 
 if modutil.module_exists('web'):
-    from cgi import FieldStorage
     from metaweb import files, coor, views
     from metaweb.files import FileField
-    from web import webapi, utils
-    from web.webapi import BadRequest
+    from web import webapi
     import web
     
     class WebpyFileField(FileField):
@@ -54,16 +53,18 @@ if modutil.module_exists('web'):
                 return web.cookies()
             
             def _read_fields(self):
-                fields = webapi.rawinput('both')
-                try:
-                    defaults = {k: {} for k in fields}
-                    fields = utils.storify(fields, _unicode=True, **defaults)
-                    for k, v in fields.items():
-                        if isinstance(v, FieldStorage):
-                            fields[k] = WebpyFileField(v)
-                    return fields
-                except KeyError:
-                    raise BadRequest()
+                env = webapi.ctx.env
+                json_fields = {}
+                method = env.get('REQUEST_METHOD', '').upper()
+                ctype = env.get('CONTENT_TYPE', '').lower()
+                if method == 'POST' and ctype == 'application/json':
+                    data = env['wsgi.input'].read().decode('utf-8')
+                    json_fields = json.loads(data)
+                fields = webapi.rawinput(method='both')
+                results = {k: v[-1] if isinstance(v, list) else v for k, v in fields.items()}
+                results = {k: v.decode('utf-8') for k, v in results.items()}
+                results.update(json_fields)
+                return results
             
             def _read_headers(self):
                 def _normalize_key(key):
