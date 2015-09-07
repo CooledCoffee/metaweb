@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from decorated.util import modutil
+import json
 
 if modutil.module_exists('webapp2'):
     from metaweb import coor, views
@@ -23,7 +24,12 @@ if modutil.module_exists('webapp2'):
             
         def _read_fields(self):
             fields = dict(self.request.GET)
-            fields.update(self.request.POST)
+            ctype = self.request.headers.get('Content-Type', '').lower()
+            if self.request.method == 'POST' and ctype.startswith('application/json'):
+                data = json.loads(self.request.body)
+                fields.update(data)
+            else:
+                fields.update(self.request.POST)
             return fields
         
         def _read_headers(self):
