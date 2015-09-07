@@ -112,7 +112,7 @@ def _encode_result(resp, req_headers):
             body = json.dumps(resp, cls=JsonEncoder)
             ctype = 'application/json'
         else:
-            body = str(resp)
+            body = unicode(resp).encode('utf-8')
             ctype = 'text/html; charset=utf-8'
         headers = {'Content-Type': ctype}
         return Response(status, body, headers=headers)
