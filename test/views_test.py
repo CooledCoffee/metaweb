@@ -32,12 +32,16 @@ class BindTest(TestCase):
         view.bind('/users/<id>')
         expected_path = re.compile('^/users/(?P<id>.*?)$')
         self.assertEqual(view, views._regex_pathes[expected_path])
+        self.assertEqual(1, len(views._regex_pathes[expected_path]._path_params))
+        self.assertEqual(unicode, views._regex_pathes[expected_path]._path_params['id'])
         
     def test_regex_path_with_type(self):
         view = View()
         view.bind('/users/<id:int>')
         expected_path = re.compile('^/users/(?P<id>.*?)$')
         self.assertEqual(view, views._regex_pathes[expected_path])
+        self.assertEqual(1, len(views._regex_pathes[expected_path]._path_params))
+        self.assertEqual(int, views._regex_pathes[expected_path]._path_params['id'])
         
 class ParseArgsTest(TestCase):
     def test_from_fields(self):
