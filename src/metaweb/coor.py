@@ -54,7 +54,7 @@ def coor_maker(base_class=object, context_class=None):
                 log.warning('Failed to render.', exc_info=True)
                 if not isinstance(e, WebError):
                     e = WebError(500, 'INTERNAL_ERROR', 'Server encountered an internal error.')
-                resp = _encode_result(e)
+                resp = _encode_result(e, headers)
             return resp
         
         def _parse_request(self):
