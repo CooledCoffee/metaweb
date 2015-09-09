@@ -64,7 +64,7 @@ class View(Function):
             elif param in defaults:
                 results[param] = defaults[param]
             else:
-                raise ValidationError(param, 'ARGUMENT_MISSING')
+                raise ValidationError('ARGUMENT_MISSING', param=param)
         return results
     
 def add_default_view(url):
