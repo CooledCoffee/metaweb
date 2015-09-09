@@ -57,7 +57,7 @@ if modutil.module_exists('web'):
                 json_fields = {}
                 method = env.get('REQUEST_METHOD', '').upper()
                 ctype = env.get('CONTENT_TYPE', '').lower()
-                if method == 'POST' and ctype == 'application/json':
+                if method == 'POST' and ctype.startswith('application/json'):
                     data = env['wsgi.input'].read().decode('utf-8')
                     json_fields = json.loads(data)
                 fields = webapi.rawinput(method='both')
