@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from metaweb.views import View
+from metaweb.views import View, Api, Page
 
-api = View
-page = View
+api = Api
+page = Page
 view = View

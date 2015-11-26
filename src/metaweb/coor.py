@@ -47,7 +47,7 @@ def coor_maker(base_class=object, context_class=None):
             try:
                 with self.context_class(request=request):
                     result = path.view.render(request)
-                    resp = _encode_result(result, headers) # need context
+                    resp = _encode_result(result, path.view.mimetype, headers.get('Accept')) # need context
             except Response as resp:
                 pass
             except Exception as e:
@@ -75,13 +75,21 @@ def coor_maker(base_class=object, context_class=None):
             return {}
     return _Coor
 
-def _encode_result(resp, req_headers):
+def _encode_result(resp, mimetype, accept):
     '''
-    >>> resp = _encode_result(Response(200, 'aaa'), {})
+    >>> resp = _encode_result(Response(200, 'aaa'), 'application/octet-stream', None)
     >>> resp.body
     'aaa'
     
-    >>> resp = _encode_result('aaa', {})
+    >>> resp = _encode_result('\xff\xff', 'application/octet-stream', None)
+    >>> resp.status
+    200
+    >>> resp.body
+    '\\xff\\xff'
+    >>> resp.headers['Content-Type']
+    'application/octet-stream'
+    
+    >>> resp = _encode_result('aaa', 'text/html; charset=utf-8', None)
     >>> resp.status
     200
     >>> resp.body
@@ -89,33 +97,41 @@ def _encode_result(resp, req_headers):
     >>> resp.headers['Content-Type']
     'text/html; charset=utf-8'
     
-    >>> resp = _encode_result('aaa', {'Accept': 'application/json'})
+    >>> resp = _encode_result('aaa', 'text/html', 'application/json')
     >>> resp.body
     '"aaa"'
     >>> resp.headers['Content-Type']
     'application/json'
     
-    >>> resp = _encode_result(WebError(400, 'ERROR_CODE', 'Error message.'), {})
+    >>> resp = _encode_result(WebError(400, 'ERROR_CODE', 'Error message.'), 'application/octet-stream', None)
     >>> resp.status
     400
     >>> resp.body
     '[ERROR_CODE] Error message.'
     >>> resp.headers['Content-Type']
-    'text/html; charset=utf-8'
+    'application/octet-stream'
+    
+    >>> resp = _encode_result(WebError(400, 'ERROR_CODE', 'Error message.'), 'application/octet-stream', 'application/json')
+    >>> resp.status
+    400
+    >>> resp.body
+    '{"message": "Error message.", "code": "ERROR_CODE"}'
+    >>> resp.headers['Content-Type']
+    'application/json'
     '''
     if isinstance(resp, Response):
         return resp
     else:
         status = resp.status if isinstance(resp, WebError) else 200
-        accept = req_headers.get('Accept')
-        if accept == 'application/json':
-            body = json.dumps(resp, cls=JsonEncoder)
-            ctype = 'application/json'
-        else:
-            body = unicode(resp).encode('utf-8')
-            ctype = 'text/html; charset=utf-8'
-        headers = {'Content-Type': ctype}
-        return Response(status, body, headers=headers)
+        if accept is not None:
+            mimetype = accept
+        if mimetype == 'application/json':
+            resp = json.dumps(resp, cls=JsonEncoder)
+            mimetype = 'application/json'
+        elif mimetype.startswith('text/') or isinstance(resp, WebError):
+            resp = unicode(resp).encode('utf-8')
+        headers = {'Content-Type': mimetype}
+        return Response(status, resp, headers=headers)
 
 @log_error('View for {path} cannot be found.')
 def _match_view(path):

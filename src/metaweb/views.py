@@ -16,7 +16,7 @@ _abs_pathes = {}
 _regex_pathes = {}
 
 class View(Function):
-    mimetype = None
+    mimetype = 'application/octet-stream'
     
     def bind(self, path):
         self.path = path
@@ -66,6 +66,12 @@ class View(Function):
             else:
                 raise ValidationError('ARGUMENT_MISSING', param=param)
         return results
+    
+class Api(View):
+    mimetype = 'application/json'
+    
+class Page(View):
+    mimetype = 'text/html; charset=utf-8'
     
 def add_default_view(url):
     @View
