@@ -47,14 +47,14 @@ def coor_maker(base_class=object, context_class=None):
             try:
                 with self.context_class(request=request):
                     result = path.view.render(request)
-                    resp = _encode_result(result, path.view.mimetype, headers.get('Accept')) # need context
+                    resp = _encode_result(result, path.view.mimetype) # need context
             except Response as resp:
                 pass
             except Exception as e:
                 log.warning('Failed to render.', exc_info=True)
                 if not isinstance(e, WebError):
                     e = WebError(500, 'INTERNAL_ERROR', 'Server encountered an internal error.')
-                resp = _encode_result(e, path.view.mimetype, headers.get('Accept'))
+                resp = _encode_result(e, path.view.mimetype)
             return resp
         
         def _parse_request(self):
@@ -75,60 +75,49 @@ def coor_maker(base_class=object, context_class=None):
             return {}
     return _Coor
 
-def _encode_result(resp, mimetype, accept):
+def _encode_result(resp, mimetype):
     '''
-    >>> resp = _encode_result(Response(200, 'aaa'), 'application/octet-stream', None)
+    >>> resp = _encode_result(Response(200, 'aaa'), 'application/octet-stream')
     >>> resp.body
     'aaa'
     
-    >>> resp = _encode_result('\xff\xff', 'application/octet-stream', None)
+    >>> resp = _encode_result('\xff\xff', 'application/octet-stream')
     >>> resp.status
     200
     >>> resp.body
     '\\xff\\xff'
-    >>> resp.headers['Content-Type']
-    'application/octet-stream'
     
-    >>> resp = _encode_result('aaa', 'text/html; charset=utf-8', None)
+    >>> resp = _encode_result('aaa', 'text/html; charset=utf-8')
     >>> resp.status
     200
     >>> resp.body
     'aaa'
-    >>> resp.headers['Content-Type']
-    'text/html; charset=utf-8'
     
-    >>> resp = _encode_result('aaa', 'text/html', 'application/json')
+    >>> resp = _encode_result('aaa', 'application/json')
     >>> resp.body
     '"aaa"'
-    >>> resp.headers['Content-Type']
-    'application/json'
     
-    >>> resp = _encode_result(WebError(400, 'ERROR_CODE', 'Error message.'), 'application/octet-stream', None)
+    >>> resp = _encode_result(WebError(400, 'ERROR_CODE', 'Error message.'), 'application/octet-stream')
     >>> resp.status
     400
     >>> resp.body
     '[ERROR_CODE] Error message.'
-    >>> resp.headers['Content-Type']
-    'application/octet-stream'
     
-    >>> resp = _encode_result(WebError(400, 'ERROR_CODE', 'Error message.'), 'application/octet-stream', 'application/json')
+    >>> resp = _encode_result(WebError(400, 'ERROR_CODE', 'Error message.'), 'application/json')
     >>> resp.status
     400
     >>> resp.body
     '{"message": "Error message.", "code": "ERROR_CODE"}'
-    >>> resp.headers['Content-Type']
-    'application/json'
     '''
     if isinstance(resp, Response):
         return resp
     else:
         status = resp.status if isinstance(resp, WebError) else 200
-        if accept is not None:
-            mimetype = accept
         if mimetype == 'application/json':
             resp = json.dumps(resp, cls=JsonEncoder)
-            mimetype = 'application/json'
-        elif mimetype.startswith('text/') or isinstance(resp, WebError):
+        elif mimetype.startswith('text/') and isinstance(resp, unicode):
+            resp = resp.encode('utf-8')
+        elif isinstance(resp, WebError):
             resp = unicode(resp).encode('utf-8')
         headers = {'Content-Type': mimetype}
         return Response(status, resp, headers=headers)
