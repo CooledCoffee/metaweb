@@ -33,6 +33,14 @@ class WebError(Exception):
         '''
         return '[%s] %s' % (self.code, self.message)
     
+class NotFoundError(WebError):
+    def __init__(self, code='NOT_FOUND', message=''):
+        super(NotFoundError, self).__init__(404, code, message=message)
+        
+class PermissionDeniedError(WebError):
+    def __init__(self, code='PERMISSION_DENIED', message=''):
+        super(NotFoundError, self).__init__(403, code, message=message)
+        
 class ValidationError(WebError):
     def __init__(self, code, param=None, message=''):
         super(ValidationError, self).__init__(400, code, message=message, param=param)
