@@ -39,7 +39,7 @@ class NotFoundError(WebError):
         
 class PermissionDeniedError(WebError):
     def __init__(self, code='PERMISSION_DENIED', message=''):
-        super(NotFoundError, self).__init__(403, code, message=message)
+        super(PermissionDeniedError, self).__init__(403, code, message=message)
         
 class ValidationError(WebError):
     def __init__(self, code, param=None, message=''):
