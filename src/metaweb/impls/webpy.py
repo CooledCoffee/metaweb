@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from cgi import FieldStorage
 from decorated.util import modutil
 import json
 
@@ -62,7 +63,7 @@ if modutil.module_exists('web'):
                     json_fields = json.loads(data)
                 fields = webapi.rawinput(method='both')
                 results = {k: v[-1] if isinstance(v, list) else v for k, v in fields.items()}
-                results = {k: v.decode('utf-8') for k, v in results.items()}
+                results = {k: v if isinstance(v, FieldStorage) else v.decode('utf-8') for k, v in results.items()}
                 results.update(json_fields)
                 return results
             
