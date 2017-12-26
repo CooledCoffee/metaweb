@@ -4,9 +4,8 @@ import setuptools
 
 setup(
     name='metaweb',
-    version='1.7.7',
+    version='1.7.8',
     author='Mengchen LEE',
-    author_email='CooledCoffee@gmail.com',
     classifiers = [
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
